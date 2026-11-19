@@ -209,15 +209,17 @@ def _refresh(
             conn.commit()
         return verification
 
+    current_confirmations = [
+        p
+        for p in participants
+        if p["decision"] == "match"
+        and p["confirmed_roster_version"] == verification["roster_version"]
+    ]
     if len(participants) < REQUIRED_PARTICIPANTS:
         new_state = "waiting"
-    elif all(
-        p["decision"] == "match"
-        and p["confirmed_roster_version"] == verification["roster_version"]
-        for p in participants
-    ):
+    elif len(current_confirmations) == len(participants):
         new_state = "verified"
-    elif any(p["decision"] == "match" for p in participants):
+    elif current_confirmations:
         new_state = "confirming"
     else:
         new_state = "ready"
@@ -374,7 +376,10 @@ def _build_view(
                 "pn_shared": bool(pn),
                 "revealed": bool(p["revealed_at"]),
                 "is_me": p["user_id"] == user_id,
-                "confirmed": p["decision"] == "match",
+                "confirmed": (
+                    p["decision"] == "match"
+                    and p["confirmed_roster_version"] == verification["roster_version"]
+                ),
                 "decision": p["decision"],
                 "confirmed_at": p["confirmed_at"],
                 "can_reveal": (
@@ -542,6 +547,15 @@ def join_verification(
             role="responder",
             joined_at=security.iso(),
         )
+        # A roster change invalidates earlier confirmations by construction.
+        conn.execute(
+            """
+            UPDATE participants
+               SET decision = NULL, confirmed_at = NULL, confirmed_roster_version = NULL
+             WHERE verification_id = ?
+            """,
+            (verification_id,),
+        )
         conn.execute(
             """
             UPDATE verifications
@@ -596,6 +610,10 @@ def confirm(
         verification = _refresh(conn, config, verification, commit=False)
         if verification["state"] in TERMINAL:
             raise VerificationError(409, "terminal", "This verification is already closed")
+        if verification["state"] not in {"ready", "confirming"}:
+            raise VerificationError(
+                409, "not_ready", "Both participants must join before confirmation"
+            )
         if int(roster_version) != verification["roster_version"]:
             raise VerificationError(
                 409, "stale_roster", "The participant list changed; refresh and confirm again"

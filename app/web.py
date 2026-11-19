@@ -82,6 +82,7 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
         protocol_version = "HTTP/1.1"
         server_version = "Samsyn"
         sys_version = ""
+        timeout = 30  # slow-client guard
 
         def do_GET(self) -> None:  # noqa: N802
             self._handle("GET")

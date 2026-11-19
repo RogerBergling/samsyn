@@ -273,6 +273,53 @@ class SamsynTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(json.loads(alice_data)["session"]["state"], "mismatch")
 
+    def test_cannot_confirm_before_both_join(self) -> None:
+        alice = self.client()
+        alice.login("alice")
+        status, data, _ = alice.post_json(
+            "/api/sessions",
+            {
+                "kind": "one_to_one",
+                "context": "",
+                "pn_mode": "masked",
+                "duration_minutes": 5,
+            },
+        )
+        self.assertEqual(status, 201, data)
+        session_id = data["id"]
+        token = data["join_url"].rsplit("/", 1)[1]
+
+        status, blocked, _ = alice.post_json(
+            f"/api/sessions/{session_id}/confirm",
+            {"decision": "match", "roster_version": data["view"]["roster_version"]},
+        )
+        self.assertEqual(status, 409)
+        self.assertEqual(blocked["error"]["code"], "not_ready")
+
+        bob = self.client()
+        bob.login("bob")
+        status, joined, _ = bob.post_json(
+            f"/api/sessions/{session_id}/join", {"token": token}
+        )
+        self.assertEqual(status, 200, joined)
+        roster = joined["session"]["roster_version"]
+
+        status, _, alice_data = alice.get(f"/api/sessions/{session_id}")
+        alice_view = json.loads(alice_data)["session"]
+        self.assertFalse(alice_view["my_confirmed"])
+
+        status, _, _ = bob.post_json(
+            f"/api/sessions/{session_id}/confirm",
+            {"decision": "match", "roster_version": roster},
+        )
+        self.assertEqual(status, 200)
+        status, final, _ = alice.post_json(
+            f"/api/sessions/{session_id}/confirm",
+            {"decision": "match", "roster_version": roster},
+        )
+        self.assertEqual(status, 200, final)
+        self.assertEqual(final["session"]["state"], "verified")
+
     def test_masked_reveal(self) -> None:
         alice, bob, session_id, token, created, joined = self.create_and_join(
             pn_mode="masked"

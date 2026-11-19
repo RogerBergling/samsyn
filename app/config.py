@@ -96,6 +96,9 @@ class Config:
             )
 
         cookie_secure = _env_bool("COOKIE_SECURE", auth_mode == "proxy")
+        cookie_name = os.getenv("COOKIE_NAME", "").strip() or (
+            "__Host-samsyn_sid" if cookie_secure else "samsyn_sid"
+        )
 
         return cls(
             auth_mode=auth_mode,
@@ -104,6 +107,7 @@ class Config:
             secret_key=secret_key,
             pn_encryption_key=pn_encryption_key,
             cookie_secure=cookie_secure,
+            cookie_name=cookie_name,
             proxy_shared_secret=proxy_shared_secret,
             base_url=base_url,
             proxy_logout_url=os.getenv("PROXY_LOGOUT_URL", "").strip() or None,
