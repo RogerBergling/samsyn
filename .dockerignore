@@ -1,0 +1,14 @@
+.git
+.github
+data
+__pycache__
+**/__pycache__
+*.pyc
+.venv
+.env
+.env.*
+!.env.example
+tests
+docs
+README.md
+compose.prod.yaml

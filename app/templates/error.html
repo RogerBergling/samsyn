@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ status }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-wrap narrow">
+  <div class="auth-copy">
+    <p class="eyebrow"><span class="pulse-dot danger" aria-hidden="true"></span>Error {{ status }}</p>
+    <h1>{% if status == 404 %}Not found.{% elif status == 403 %}Access denied.{% elif status == 410 %}Expired.{% else %}Something went wrong.{% endif %}</h1>
+    <p class="hero-lede">{{ message }}</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="/">Back to home <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+      <a class="btn btn-ghost" href="/security">Security model</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

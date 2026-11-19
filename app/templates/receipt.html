@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Receipt {{ receipt.payload.reference }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="receipt-wrap">
+  <div class="receipt-actions no-print">
+    <a class="btn btn-ghost" href="/">Back to home</a>
+    <div class="hero-actions">
+      <a class="btn" href="/api/receipts/{{ receipt.id }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-download"></use></svg>Download JSON</a>
+      <button class="btn btn-primary" type="button" id="print-receipt"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>Print / save PDF</button>
+    </div>
+  </div>
+
+  <article class="receipt" id="receipt">
+    <header class="receipt-head">
+      <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-shield"></use></svg></span>
+      <div>
+        <p class="eyebrow">Verification receipt</p>
+        <h1>{{ receipt.payload.reference }}</h1>
+        <p class="muted">{{ receipt.payload.kind_label }}{% if receipt.payload.context %} · {{ receipt.payload.context }}{% endif %}</p>
+      </div>
+      <span class="pill ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Verified</span>
+    </header>
+
+    <div class="receipt-status">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>
+      <div>
+        <strong>Both participants confirmed the same session code and each other’s identity.</strong>
+        <span>{{ receipt.payload.verified_at }}</span>
+      </div>
+    </div>
+
+    <dl class="kv receipt-kv">
+      <div><dt>Session</dt><dd class="mono">{{ receipt.payload.reference }}</dd></div>
+      <div><dt>Type</dt><dd>{{ receipt.payload.kind_label }}</dd></div>
+      {% if receipt.payload.context %}<div><dt>Context</dt><dd>{{ receipt.payload.context }}</dd></div>{% endif %}
+      <div><dt>Verified at</dt><dd class="mono">{{ receipt.payload.verified_at }}</dd></div>
+      <div><dt>Receipt ID</dt><dd class="mono">{{ receipt.id }}</dd></div>
+    </dl>
+
+    <h2>Participants</h2>
+    <div class="receipt-participants">
+      {% for p in receipt.payload.participants %}
+      <div class="receipt-person">
+        <span class="avatar">{{ initials(p.name) }}</span>
+        <div>
+          <strong>{{ p.name }}</strong>
+          <span class="muted">{{ p.role_label }}{% if p.org %} · {{ p.org }}{% endif %}</span>
+        </div>
+        <div class="receipt-person-meta">
+          <span class="pill {{ 'ok' if p.assurance == 'eid_auth' else 'warn' }}">{{ p.assurance_label }}</span>
+          <span class="mono muted">{{ p.pn_masked }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="callout compact">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg>
+      <div>
+        <strong>What this proves.</strong> Both authenticated accounts joined the same session, saw each other’s identity, and independently confirmed. It does not prove that the call audio or video is authentic, or that a device was not compromised.
+      </div>
+    </div>
+
+    <footer class="receipt-foot">
+      <div>
+        <span>Method</span>
+        <strong>{{ receipt.payload.method }}</strong>
+      </div>
+      <div>
+        <span>Integrity</span>
+        <strong class="mono">HMAC-SHA256 {{ receipt.integrity_hmac[:24] }}…</strong>
+      </div>
+      <p>{{ receipt.payload.disclaimer }}</p>
+    </footer>
+  </article>
+</section>
+{% endblock %}

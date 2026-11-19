@@ -1,0 +1,21 @@
+services:
+  samsyn:
+    image: ghcr.io/rogerbergling/samsyn:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      AUTH_MODE: proxy
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      PN_ENCRYPTION_KEY: ${PN_ENCRYPTION_KEY:-}
+      PROXY_SHARED_SECRET: ${PROXY_SHARED_SECRET:-}
+      COOKIE_SECURE: "1"
+      BASE_URL: ${BASE_URL:?set BASE_URL in .env}
+      PROXY_LOGOUT_URL: ${PROXY_LOGOUT_URL:-}
+      DATA_DIR: /data
+      PORT: "8080"
+    volumes:
+      - samsyn-data:/data
+
+volumes:
+  samsyn-data:

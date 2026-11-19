@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Sign in · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="auth-wrap">
+  <div class="auth-copy">
+    <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span>Development mode</p>
+    <h1>Choose a mock identity.</h1>
+    <p class="hero-lede">
+      In production, your existing secure proxy authenticates you and injects
+      <code>X-User-Id</code>, <code>X-Name</code>, <code>X-Last-Name</code> and
+      <code>X-Person-Id</code>. This page exists only so the app can be tested
+      without a proxy.
+    </p>
+    <div class="callout warn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
+      <div><strong>Never expose development mode to the internet.</strong> Anyone who can open
+      <code>/dev/login</code> can choose an identity.</div>
+    </div>
+    {% if error %}<div class="callout danger">{{ error }}</div>{% endif %}
+  </div>
+
+  <div class="auth-grid">
+    {% for key, data in dev_users.items() %}
+    <a class="identity-choice" href="/dev/login?user={{ key }}&next={{ next_url|urlencode }}">
+      <span class="avatar avatar-lg">{{ initials(data.first_name ~ ' ' ~ data.last_name) }}</span>
+      <span class="identity-choice-body">
+        <strong>{{ data.first_name }} {{ data.last_name }}</strong>
+        <span class="muted">{{ data.org or 'Private individual' }}</span>
+        <span class="pn-masked">{{ data.person_id[:4] }}••••-••••</span>
+      </span>
+      <span class="pill {{ 'ok' if data.assurance == 'eid_auth' else 'warn' }}">
+        {{ assurance_label(data.assurance, True) }}
+      </span>
+      <svg class="choice-arrow" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="panel auth-foot">
+  <div class="panel-head">
+    <div>
+      <p class="eyebrow">Production behaviour</p>
+      <h2>No login form in the real deployment.</h2>
+    </div>
+    <span class="pill accent"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"></use></svg> Proxy trust boundary</span>
+  </div>
+  <p class="muted">
+    The app creates its own server-side session and CSRF token after validating the proxy
+    identity. It never accepts a user ID from the browser. If the proxy is missing or the
+    request reaches the app directly, the request is rejected.
+  </p>
+</section>
+{% endblock %}

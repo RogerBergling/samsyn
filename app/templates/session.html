@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ view.public_ref }} · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section id="session-root" data-session-id="{{ session_id }}" aria-live="polite">
+  <div class="session-loading">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Loading verification <span class="mono">{{ view.public_ref }}</span>…</p>
+  </div>
+
+  <noscript>
+    <div class="panel">
+      <p class="eyebrow">No JavaScript</p>
+      <h1>{{ view.public_ref }}</h1>
+      <p>This session is <strong>{{ view.state_label }}</strong>. The live comparison and confirmation need JavaScript. You can still view the receipt if the session is verified.</p>
+      <ul class="plain-list">
+        {% for p in view.participants %}
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"></use></svg>{{ p.name }}{% if p.is_me %} (you){% endif %} · {{ p.assurance_label }}</li>
+        {% endfor %}
+      </ul>
+      {% if view.receipt %}<a class="btn btn-primary" href="/receipts/{{ view.receipt.id }}">Open receipt</a>{% endif %}
+    </div>
+  </noscript>
+</section>
+{% endblock %}

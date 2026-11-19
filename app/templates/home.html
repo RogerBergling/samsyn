@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}{{ app_name }} — mutual verification for calls{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span>Mutual call verification</p>
+    <h1>Verify the person, <em>not just the account.</em></h1>
+    <p class="hero-lede">
+      Two people, one short session, one shared code. Both sides see each other’s
+      identity and both must confirm. No static secret. No account takeover by
+      guessing a number.
+    </p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#start">Start a verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+      <a class="btn btn-ghost" href="#join">Join with a link</a>
+    </div>
+    <div class="hero-proof" aria-label="Principles">
+      <span class="pill accent"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"></use></svg>Per-session code</span>
+      <span class="pill ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both must confirm</span>
+      <span class="pill"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg>No static secret</span>
+    </div>
+    <div class="hero-stats">
+      <div><strong>1:1</strong><span>first release</span></div>
+      <div><strong>5 min</strong><span>default lifetime</span></div>
+      <div><strong>2</strong><span>independent confirmations</span></div>
+      <div><strong>0</strong><span>trackers</span></div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        <span class="terminal-title">samsyn@local:~/verify</span>
+        <span class="terminal-live"><span class="live-dot" aria-hidden="true"></span>live</span>
+      </div>
+      <pre class="terminal-body"><code><span class="t-prompt">$</span> samsyn verify --session VS-7F3K2
+<span class="t-dim">→</span> session created · 5 min ttl
+<span class="t-ok">✓</span> Alice Andersson joined <span class="t-dim">[eID verified]</span>
+<span class="t-ok">✓</span> Bob Berg joined <span class="t-dim">[proxy identity]</span>
+
+<span class="t-dim">code</span>  <span class="t-accent">482 913</span>
+<span class="t-dim">words</span> katt · berg · cykel
+
+<span class="t-ok">✓</span> Alice confirmed the code and the person
+<span class="t-ok">✓</span> Bob confirmed the code and the person
+<span class="t-ok">→</span> receipt ready · integrity protected
+
+<span class="t-prompt">$</span> <span class="cursor">█</span></code></pre>
+      <div class="terminal-foot"><span>Python · SQLite · no static secrets</span><span>example session</span></div>
+    </div>
+    <div class="terminal-caption">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg>
+      <span>The app verifies account presence. It does not claim the voice channel is authentic.</span>
+    </div>
+  </div>
+</section>
+
+<section class="workspace-grid" id="start">
+  <div class="panel create-panel">
+    <div class="panel-head">
+      <div>
+        <p class="eyebrow">New session</p>
+        <h2>Start a verification</h2>
+      </div>
+      <span class="pill {{ 'ok' if user.assurance == 'eid_auth' else 'warn' }}">
+        {{ assurance_label(user.assurance, is_dev) }}
+      </span>
+    </div>
+
+    <div class="identity-strip">
+      <span class="avatar">{{ initials(user.display_name) }}</span>
+      <div>
+        <strong>{{ user.display_name }}</strong>
+        <span class="muted">{{ user.pn_masked or 'No personal number supplied' }}{% if user.org %} · {{ user.org }}{% endif %}</span>
+      </div>
+      <span class="pill">You</span>
+    </div>
+
+    <form id="create-form" class="form" autocomplete="off">
+      <input type="hidden" name="kind" id="kind-input" value="one_to_one">
+
+      <fieldset class="field">
+        <legend>What kind of verification?</legend>
+        <div class="choice-grid" id="mode-grid">
+          <button type="button" class="choice active" data-mode="one_to_one">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-phone"></use></svg>
+            <span><strong>1:1 call</strong><small>Voice or video, two people</small></span>
+          </button>
+          <button type="button" class="choice" data-mode="customer_service">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-building"></use></svg>
+            <span><strong>Customer service</strong><small>Agent and customer</small></span>
+          </button>
+          <button type="button" class="choice" data-mode="in_person">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"></use></svg>
+            <span><strong>In person</strong><small>Two devices, same room</small></span>
+          </button>
+        </div>
+      </fieldset>
+
+      <label class="field">
+        <span>Context <small>optional, max 200 characters</small></span>
+        <input class="input" id="context" name="context" maxlength="200" placeholder="e.g. Apartment viewing, support call, contract discussion">
+      </label>
+
+      <fieldset class="field">
+        <legend>Personal number detail shown</legend>
+        <label class="radio">
+          <input type="radio" name="pn_mode" value="full" checked>
+          <span><strong>Full personal number</strong> <span class="pill warn">Sensitive</span><small>Displayed in the session and hidden when the tab loses focus. Never written to receipts or logs.</small></span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="pn_mode" value="masked">
+          <span><strong>Masked</strong> <small>Show only the year and a masked number. A participant can choose to reveal their own number later.</small></span>
+        </label>
+      </fieldset>
+
+      <label class="field">
+        <span>Session lifetime</span>
+        <select class="input" id="duration" name="duration_minutes">
+          <option value="5" selected>5 minutes</option>
+          <option value="10">10 minutes</option>
+          <option value="15">15 minutes</option>
+        </select>
+      </label>
+
+      <div class="callout warn compact">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
+        <div>Only continue if you expected this call. The code confirms the session; it does not prove the voice on the call is authentic.</div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" type="submit" id="create-button">
+        Create verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+      </button>
+    </form>
+  </div>
+
+  <div class="stack">
+    <div class="panel" id="join">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Invited?</p>
+          <h2>Join a verification</h2>
+        </div>
+        <span class="pill accent"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-link"></use></svg> One-time link</span>
+      </div>
+      <form id="join-form" class="form">
+        <label class="field">
+          <span>Invite link or token</span>
+          <input class="input" id="join-input" placeholder="https://…/join/… or the token" autocomplete="off" spellcheck="false">
+        </label>
+        <button class="btn btn-lg" type="submit">Open invite <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></button>
+      </form>
+      <p class="muted small">The join token is single-use and expires. It is not the verification code.</p>
+    </div>
+
+    <div class="panel recent-panel">
+      <div class="panel-head">
+        <div>
+          <p class="eyebrow">Activity</p>
+          <h2>Recent sessions</h2>
+        </div>
+        <span class="pill">{{ recent|length }}</span>
+      </div>
+      {% if recent %}
+      <div class="recent-list">
+        {% for item in recent %}
+        <a class="recent-item" href="/session/{{ item.id }}">
+          <span class="recent-icon {{ item.state }}">{% if item.state == 'verified' %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{% elif item.state in ['mismatch','expired','cancelled'] %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg>{% endif %}</span>
+          <span class="recent-body">
+            <strong>{{ item.other_name or 'Waiting for participant' }}</strong>
+            <span>{{ item.kind_label }}{% if item.context %} · {{ item.context }}{% endif %}</span>
+          </span>
+          <span class="pill {{ 'ok' if item.state == 'verified' else ('danger' if item.state in ['mismatch','expired','cancelled'] else 'accent') }}">{{ item.state_label }}</span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"></use></svg>
+        <p>No sessions yet. Start one above.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="how-section" id="how">
+  <div class="section-head">
+    <div>
+      <p class="eyebrow">The ceremony</p>
+      <h2>Three steps. Both sides confirm.</h2>
+    </div>
+    <p class="section-sub">The code is a shared fingerprint of this session, not a password. The identity cards are what make a relay visible.</p>
+  </div>
+  <div class="steps-grid">
+    <article class="step-card">
+      <span class="step-number">01</span>
+      <h3>Create and invite</h3>
+      <p>Start a session. Share the one-time link in the call chat. The link expires quickly and is not the verification code.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-number">02</span>
+      <h3>See the same person</h3>
+      <p>Both participants see each other’s name, assurance level and masked or full personal number. If the name is wrong, stop.</p>
+    </article>
+    <article class="step-card">
+      <span class="step-number">03</span>
+      <h3>Compare and confirm</h3>
+      <p>Read the code aloud. Each person independently confirms the code and the person. Only then is a receipt created.</p>
+    </article>
+  </div>
+</section>
+
+<section class="promise-grid">
+  <div class="panel">
+    <p class="eyebrow">What it proves</p>
+    <h2>Account presence, together.</h2>
+    <ul class="check-list">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both authenticated accounts joined the same session.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both saw each other’s identity and assurance level.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both independently confirmed within the time window.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <p class="eyebrow">What it does not prove</p>
+    <h2>The call channel is still the call channel.</h2>
+    <ul class="cross-list">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"></use></svg>That the voice or video stream is unmodified.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"></use></svg>That the device or account is not compromised.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-x"></use></svg>That a group call has no unverified listener.</li>
+    </ul>
+    <a class="text-link" href="/security">Read the security model <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+  </div>
+</section>
+
+{% if is_dev %}
+<div class="dev-banner">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-terminal"></use></svg>
+  <div><strong>Development mode.</strong> The top-right identity is a mock. In production the proxy supplies it and this page has no sign-in selector.</div>
+</div>
+{% endif %}
+{% endblock %}

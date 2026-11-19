@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Join verification · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="join-wrap">
+  <div class="join-copy">
+    <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span>Invitation · {{ invite.public_ref }}</p>
+    <h1>{% if invite.kind == 'customer_service' and invite.initiator.org %}{{ invite.initiator.org }} wants to verify you.{% else %}{{ invite.initiator.name }} wants to verify you are both on this call.{% endif %}</h1>
+    <p class="hero-lede">
+      {% if invite.kind == 'customer_service' %}
+      You are about to verify that you are speaking with {{ invite.initiator.org or 'the company' }} and that the agent is who the app says they are.
+      {% elif invite.kind == 'in_person' %}
+      You are both in the same place. Open the app on your own device so both identities are visible.
+      {% else %}
+      This creates a short session where both of you see each other’s identity and confirm the same code.
+      {% endif %}
+    </p>
+
+    <div class="callout">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg>
+      <div>
+        <strong>Only continue if you expected this contact.</strong>
+        If the name, company or context does not match, close this page and contact the person or company through a channel you already trust.
+      </div>
+    </div>
+
+    {% if invite.kind == 'customer_service' %}
+    <div class="callout warn">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
+      <div><strong>Never read a verification code to someone who called you.</strong> The company initiates; you confirm inside the app. This app will never ask you to read a code back.</div>
+    </div>
+    {% endif %}
+
+    <div class="join-actions">
+      <button class="btn btn-primary btn-lg" type="button" id="join-button" data-session-id="{{ invite.verification_id }}" data-token="{{ token }}">
+        Join verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+      </button>
+      <a class="btn btn-ghost" href="/">Not now</a>
+    </div>
+    <p class="muted small">You are signed in as <strong>{{ user.display_name }}</strong>. The invite link is single-use and expires.</p>
+    <noscript><div class="callout danger">JavaScript is required to join the live session.</div></noscript>
+  </div>
+
+  <aside class="join-side">
+    <div class="panel">
+      <p class="eyebrow">Initiator</p>
+      <div class="identity-card large">
+        <div class="identity-head">
+          <span class="avatar avatar-lg">{{ invite.initiator.initials }}</span>
+          <div>
+            <h2>{{ invite.initiator.name }}</h2>
+            <span class="muted">{{ invite.initiator.org or 'Private individual' }}</span>
+          </div>
+        </div>
+        <div class="identity-meta">
+          <span class="pill {{ 'ok' if invite.initiator.assurance == 'eid_auth' else 'warn' }}">{{ invite.initiator.assurance_label }}</span>
+          <span class="pill">{{ invite.kind_label }}</span>
+        </div>
+        <dl class="kv">
+          <div><dt>Personal number</dt><dd class="mono">{{ invite.initiator.pn_masked }}</dd></div>
+          <div><dt>Session</dt><dd class="mono">{{ invite.public_ref }}</dd></div>
+          {% if invite.context %}<div><dt>Context</dt><dd>{{ invite.context }}</dd></div>{% endif %}
+          <div><dt>Expires</dt><dd class="mono" data-expires="{{ invite.expires_at }}">{{ invite.expires_at }}</dd></div>
+        </dl>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="eyebrow">What will be shared</p>
+      <ul class="plain-list">
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"></use></svg>Your name and assurance level.</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"></use></svg>{% if invite.pn_mode == 'full' %}Your full personal number, displayed in the session.{% else %}A masked personal number; you can choose to reveal your own later.{% endif %}</li>
+        <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>A receipt if both of you confirm.</li>
+      </ul>
+      {% if invite.pn_mode == 'full' %}
+      <div class="callout warn compact">The initiator selected full personal-number display. This is sensitive. The number is never written to receipts or logs.</div>
+      {% endif %}
+    </div>
+  </aside>
+</section>
+{% endblock %}
