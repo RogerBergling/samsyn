@@ -256,3 +256,7 @@ The working name is **Samsyn**, chosen by the product owner for the prototype de
 - [Threat model](docs/threat-model.md)
 - [Naming](docs/naming.md)
 - [Deployment](docs/deployment.md)
+
+## License
+
+MIT. See [LICENSE](LICENSE).
