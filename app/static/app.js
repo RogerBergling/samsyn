@@ -226,6 +226,16 @@
         </div>
         ${codePanel(view)}
         ${joinBlock}
+        <div class="session-help">
+          <strong>What happens next</strong>
+          <ol>
+            <li>They open the link and join.</li>
+            <li>You both see the same name and code.</li>
+            <li>Read the code aloud. Both of you confirm.</li>
+          </ol>
+          <p>Share the link, not the code. Anyone on the call can hear the code; it is not a password and expires.</p>
+          <a href="/how-it-works">How it works</a>
+        </div>
         <div class="confirm-actions">
           ${devButton}
           <button class="btn btn-danger" type="button" data-action="cancel">Cancel</button>
@@ -272,6 +282,16 @@
           <p class="eyebrow">Compare</p>
           <h2>Read the code aloud.</h2>
           ${codePanel(view)}
+          <div class="session-help">
+            <strong>What to do</strong>
+            <ol>
+              <li>Read the code aloud.</li>
+              <li>Check that the name is the person you expected.</li>
+              <li>Both press Confirm.</li>
+            </ol>
+            <p>Anyone on the call can hear the code. It is not a password and expires. Do not text or email it.</p>
+            <a href="/how-it-works">How it works</a>
+          </div>
           <p class="safety-note">Only confirm if the name and code match.</p>
           <div class="confirm-panel">${confirmBlock}</div>
           <div class="confirm-actions">

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}How it works · {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="page-head">
+  <p class="eyebrow">How it works</p>
+  <h1>Two people. One short verification.</h1>
+  <p class="hero-lede">
+    You share an invitation link, both join, read the same code aloud, and both confirm.
+    It takes about a minute.
+  </p>
+</section>
+
+<section class="steps-grid four" aria-label="Verification steps">
+  <article class="step-card">
+    <span class="step-number">01</span>
+    <h3>Share the link</h3>
+    <p>Start a verification and copy the link. Send it to the person in the call chat, by SMS, or by email. The link works once and expires.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-number">02</span>
+    <h3>Both join</h3>
+    <p>The other person opens the link and signs in. You will both see each other's name and the same code.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-number">03</span>
+    <h3>Read the code aloud</h3>
+    <p>Read the 6 digits and 3 words on the call. Do not text or email the code; it must be compared live. Check that the name is the person you expected.</p>
+  </article>
+  <article class="step-card">
+    <span class="step-number">04</span>
+    <h3>Both confirm</h3>
+    <p>Each person presses Confirm. Only then is the verification complete and a receipt created.</p>
+  </article>
+</section>
+
+<section class="promise-grid">
+  <div class="panel">
+    <p class="eyebrow">What to share</p>
+    <h2>Share the link, not the code.</h2>
+    <ul class="check-list">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Send the invitation link in the call chat, SMS, or email.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>The link works once. Do not post it publicly.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>The code is read aloud only after both of you have joined.</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <p class="eyebrow">Who can hear the code</p>
+    <h2>Anyone on the call can hear it.</h2>
+    <ul class="check-list">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>The code is not a password. It is a short-lived check that you are in the same session.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Do not read it to someone who called you first, and do not post it.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>In a group call, other people can hear it. The app cannot detect a silent listener. For sensitive calls, use a 1:1 call and check the name.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="panel">
+  <p class="eyebrow">During the verification</p>
+  <h2>What each person should do.</h2>
+  <div class="promise-grid">
+    <div>
+      <h3>The person who starts</h3>
+      <ol class="help-list">
+        <li>Start a verification.</li>
+        <li>Copy the invitation link and send it to the other person.</li>
+        <li>Wait for them to join.</li>
+        <li>Read the code aloud and press Confirm.</li>
+      </ol>
+    </div>
+    <div>
+      <h3>The person who joins</h3>
+      <ol class="help-list">
+        <li>Open the invitation link.</li>
+        <li>Check the name of the person who invited you.</li>
+        <li>Compare the code with them on the call.</li>
+        <li>Press Confirm only if the name and code match.</li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<div class="callout warn">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
+  <div>
+    <strong>If the name or code is wrong, stop.</strong>
+    Press “Something is wrong” and do not continue the call based on this verification. Contact the person or company through a channel you already trust.
+  </div>
+</div>
+
+<div class="hero-actions">
+  <a class="btn btn-primary" href="/">Start a verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+  <a class="btn btn-ghost" href="/security">Safety</a>
+</div>
+{% endblock %}

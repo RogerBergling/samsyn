@@ -22,6 +22,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 - Full personal number display as a controlled “sensitive” view, encrypted at rest, never logged, never written to receipts.
 - Receipts with HMAC-SHA256 integrity, JSON download, and print/PDF.
 - A plain-language Safety page explaining what is and is not verified.
+- A How it works page covering what to share, what each person does, and who can hear the code.
 - Dockerfile, Compose files, CI, and a GitHub Actions workflow that publishes to GHCR.
 
 Group verification is deliberately not in v0.1. The data model and design leave room for it, but group roster verification needs its own phase.

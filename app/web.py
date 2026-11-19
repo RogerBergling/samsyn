@@ -201,6 +201,8 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 return self._home(auth_ctx)
             if path == "/security":
                 return self._security(auth_ctx)
+            if path == "/how-it-works":
+                return self._how_it_works(auth_ctx)
             if path == "/logout":
                 return self._logout(auth_ctx)
             if path.startswith("/join/"):
@@ -267,6 +269,15 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
         def _security(self, auth_ctx: auth.AuthContext) -> None:
             return self._render(
                 "security.html",
+                200,
+                user=auth_ctx.user,
+                csrf_token=auth_ctx.csrf_token,
+                auth_ctx=auth_ctx,
+            )
+
+        def _how_it_works(self, auth_ctx: auth.AuthContext) -> None:
+            return self._render(
+                "how_it_works.html",
                 200,
                 user=auth_ctx.user,
                 csrf_token=auth_ctx.csrf_token,

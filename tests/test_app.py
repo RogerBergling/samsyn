@@ -163,6 +163,10 @@ class SamsynTests(unittest.TestCase):
 
         text = client.login("alice")
         self.assertIn("Start a verification", text)
+        status, _, howto = client.get("/how-it-works")
+        self.assertEqual(status, 200)
+        self.assertIn(b"What to share", howto)
+        self.assertIn(b"Who can hear the code", howto)
         status, data, _ = client.post_json(
             "/api/sessions",
             {
