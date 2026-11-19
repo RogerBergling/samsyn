@@ -43,6 +43,24 @@ TEMPLATE_ENV.globals.update(
 TEMPLATE_ENV.filters["format_dt"] = _format_datetime
 
 
+def _normalize_origin(value: str | None) -> str | None:
+    if not value:
+        return None
+    try:
+        parsed = urlparse(value.strip())
+    except ValueError:
+        return None
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return None
+    scheme = parsed.scheme.lower()
+    netloc = parsed.netloc.lower()
+    if scheme == "http" and netloc.endswith(":80"):
+        netloc = netloc[:-3]
+    elif scheme == "https" and netloc.endswith(":443"):
+        netloc = netloc[:-4]
+    return f"{scheme}://{netloc}"
+
+
 class AppError(Exception):
     def __init__(self, status: int, code: str, message: str):
         super().__init__(message)
@@ -480,18 +498,42 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 raise AppError(403, "csrf", "Invalid or missing CSRF token")
             origin = self.headers.get("Origin")
             if origin:
-                expected = self._origin()
-                if not expected or origin.rstrip("/") != expected.rstrip("/"):
-                    raise AppError(403, "origin", "Cross-origin request rejected")
+                normalized = _normalize_origin(origin)
+                if not normalized or normalized not in self._origin_candidates():
+                    raise AppError(
+                        403,
+                        "origin",
+                        "Request origin is not allowed. Check BASE_URL or ALLOWED_ORIGINS.",
+                    )
+
+        def _origin_candidates(self) -> set[str]:
+            candidates: set[str] = set()
+            for value in (config.base_url, *config.allowed_origins):
+                normalized = _normalize_origin(value)
+                if normalized:
+                    candidates.add(normalized)
+            forwarded_host = (
+                self.headers.get("X-Forwarded-Host") or ""
+            ).split(",")[0].strip()
+            host = forwarded_host or (self.headers.get("Host") or "").split(",")[0].strip()
+            proto = (self.headers.get("X-Forwarded-Proto") or "http").split(",")[0].strip()
+            if host:
+                normalized = _normalize_origin(f"{proto}://{host}")
+                if normalized:
+                    candidates.add(normalized)
+            return candidates
 
         def _origin(self) -> str | None:
             if config.base_url:
                 return config.base_url
-            host = self.headers.get("Host")
+            forwarded_host = (
+                self.headers.get("X-Forwarded-Host") or ""
+            ).split(",")[0].strip()
+            host = forwarded_host or self.headers.get("Host")
             if not host:
                 return None
             proto = (self.headers.get("X-Forwarded-Proto") or "http").split(",")[0].strip()
-            return f"{proto}://{host}"
+            return f"{proto}://{host.split(',')[0].strip()}"
 
         def _base_url(self) -> str:
             return self._origin() or f"http://127.0.0.1:{config.port}"

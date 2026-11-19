@@ -20,6 +20,8 @@ def make_config(
     *,
     auth_mode: str = "dev",
     proxy_shared_secret: str | None = None,
+    base_url: str | None = None,
+    allowed_origins: tuple[str, ...] = (),
 ) -> Config:
     return Config(
         auth_mode=auth_mode,
@@ -29,9 +31,10 @@ def make_config(
         pn_encryption_key=None,
         cookie_secure=False,
         proxy_shared_secret=proxy_shared_secret,
-        base_url=None,
+        base_url=base_url,
         proxy_logout_url=None,
         github_url="https://github.com/RogerBergling",
+        allowed_origins=allowed_origins,
     )
 
 
@@ -181,6 +184,44 @@ class SamsynTests(unittest.TestCase):
         )
         self.assertEqual(status, 403)
         self.assertEqual(data["error"]["code"], "csrf")
+
+    def test_origin_accepts_same_host_even_if_base_url_differs(self) -> None:
+        origin_dir = self.directory / "origin"
+        origin_dir.mkdir()
+        origin_config = make_config(
+            origin_dir, base_url="https://wrong.example"
+        )
+        client = self.start_extra_server(origin_config)
+        client.login("alice")
+
+        payload = {
+            "kind": "one_to_one",
+            "context": "Origin test",
+            "pn_mode": "masked",
+            "duration_minutes": 5,
+        }
+        status, data, _ = client.request(
+            "POST",
+            "/api/sessions",
+            body=payload,
+            headers={
+                "X-CSRF-Token": client.csrf,
+                "Origin": client.base_url,
+            },
+        )
+        self.assertEqual(status, 201, data)
+
+        status, _, data = client.request(
+            "POST",
+            "/api/sessions",
+            body=payload,
+            headers={
+                "X-CSRF-Token": client.csrf,
+                "Origin": "https://evil.example",
+            },
+        )
+        self.assertEqual(status, 403)
+        self.assertEqual(json.loads(data)["error"]["code"], "origin")
 
     def test_forged_header_ignored_in_dev(self) -> None:
         alice = self.client()

@@ -35,6 +35,7 @@ class Config:
     base_url: str | None
     proxy_logout_url: str | None
     github_url: str
+    allowed_origins: tuple[str, ...] = ()
     app_name: str = "Samsyn"
     version: str = "0.1.0"
     host: str = "0.0.0.0"
@@ -89,6 +90,11 @@ class Config:
             )
 
         base_url = os.getenv("BASE_URL", "").strip().rstrip("/") or None
+        allowed_origins = tuple(
+            origin.strip().rstrip("/")
+            for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
+            if origin.strip()
+        )
         if auth_mode == "proxy" and not base_url:
             warnings.append(
                 "BASE_URL is not set. Join links will be derived from the Host header; "
@@ -112,6 +118,7 @@ class Config:
             base_url=base_url,
             proxy_logout_url=os.getenv("PROXY_LOGOUT_URL", "").strip() or None,
             github_url=os.getenv("GITHUB_URL", "https://github.com/RogerBergling").strip(),
+            allowed_origins=allowed_origins,
             host=os.getenv("HOST", "0.0.0.0").strip(),
             port=_env_int("PORT", 8080),
             verification_ttl_seconds=_env_int("VERIFICATION_TTL_SECONDS", 300),

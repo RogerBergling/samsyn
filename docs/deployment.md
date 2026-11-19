@@ -41,6 +41,7 @@ The app should **not** be published directly. Bind it to localhost or a private 
 | `COOKIE_SECURE` | true in proxy mode | Adds `Secure` to the session cookie. Set `0` only for local HTTP. |
 | `COOKIE_NAME` | `__Host-samsyn_sid` when secure, else `samsyn_sid` | Session cookie name. The `__Host-` prefix requires `Secure`, `Path=/`, and no `Domain`. |
 | `BASE_URL` | derived from Host | Absolute URL used for invite links. Set this in production. |
+| `ALLOWED_ORIGINS` | empty | Comma-separated additional browser origins accepted by the CSRF origin check, e.g. an alias hostname. The request’s own host is always accepted. |
 | `PROXY_LOGOUT_URL` | unset | Redirect target for sign-out. |
 | `DATA_DIR` | `./data` | SQLite data directory. Use a persistent volume in containers. |
 | `DATABASE_PATH` | `$DATA_DIR/samsyn.db` | Override the database path. |
@@ -233,7 +234,7 @@ Test environments are free; production is not. See the README section on eID opt
 - [ ] Proxy strips client-supplied identity headers; tested.
 - [ ] Proxy-to-app leg uses mTLS or `PROXY_SHARED_SECRET`.
 - [ ] `SECRET_KEY` is strong and stored in a secret manager.
-- [ ] `COOKIE_SECURE=1`, `BASE_URL=https://...`.
+- [ ] `COOKIE_SECURE=1`, `BASE_URL=https://...`, and `ALLOWED_ORIGINS` cover every public hostname used to open the app.
 - [ ] `X-Auth-Assurance` is set honestly.
 - [ ] `DATA_DIR` is on a persistent volume; backups tested.
 - [ ] Receipt/event retention policy implemented.

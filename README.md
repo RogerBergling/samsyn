@@ -98,9 +98,16 @@ PN_ENCRYPTION_KEY=<optional separate 32+ char key>
 PROXY_SHARED_SECRET=<optional proxy shared secret>
 COOKIE_SECURE=1
 BASE_URL=https://verify.example.se
+ALLOWED_ORIGINS=https://verify.example.se,https://verify-alias.example.se
 PROXY_LOGOUT_URL=https://sso.example.se/logout
 DATA_DIR=/data
 ```
+
+**If you see “Request origin is not allowed” when starting a verification:**
+open the app on the same URL you configured in `BASE_URL`, or add the browser’s
+origin to `ALLOWED_ORIGINS` (comma-separated). The request’s own host is accepted
+automatically, so this is usually a `localhost` vs `127.0.0.1`, port, or proxy
+hostname mismatch.
 
 ---
 
@@ -179,7 +186,7 @@ python3 -m unittest discover -s tests -v
 The suite covers:
 
 - health and dev login,
-- CSRF enforcement,
+- CSRF enforcement and origin acceptance/rejection,
 - forged `X-User-Id` ignored in dev,
 - full create/join/confirm/receipt flow,
 - single-use join tokens and IDOR,
