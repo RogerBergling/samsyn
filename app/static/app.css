@@ -441,8 +441,9 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 .step-card p { margin: 0; color: var(--muted); font-size: 0.82rem; }
 .promise-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding-top: 1rem; }
 .check-list, .cross-list, .plain-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.55rem; }
-.check-list li, .cross-list li, .plain-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.82rem; color: var(--text-soft); line-height: 1.45; }
-.check-list svg, .cross-list svg, .plain-list svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 0.12rem; }
+.check-list li, .cross-list li, .plain-list li { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.82rem; color: var(--text-soft); line-height: 1.65; }
+.check-list svg, .cross-list svg, .plain-list svg { width: 16px; height: 16px; flex: 0 0 auto; margin-top: 0.2rem; }
+.check-list code, .callout code { white-space: nowrap; }
 .check-list svg { color: var(--ok); }
 .cross-list svg { color: var(--danger); }
 .plain-list svg { color: var(--accent); }
@@ -538,6 +539,7 @@ select.input { appearance: none; background-image: linear-gradient(45deg, transp
 .status-icon { width: 42px; height: 42px; border-radius: 999px; display: grid; place-items: center; flex: 0 0 auto; }
 .status-icon svg { width: 20px; height: 20px; }
 .status-card.ok .status-icon { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); border: 1px solid color-mix(in srgb, var(--ok) 35%, transparent); }
+.status-card.accent .status-icon { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
 .status-card.warn .status-icon { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); }
 .status-card.danger .status-icon { color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, transparent); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); }
 .status-card h2 { margin: 0 0 0.25rem; font-size: 1.15rem; }

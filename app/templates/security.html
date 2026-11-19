@@ -63,11 +63,11 @@
     <h2>The boundary must be real</h2>
     <ul class="check-list">
       <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Authenticate every request, including API and static pages.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Strip any client-supplied <code>X-User-Id</code>, <code>X-Name</code>, <code>X-Last-Name</code>, <code>X-Person-Id</code>.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Strip any client-supplied <code>X-User-Id</code> or related identity headers.</li>
       <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Inject identity only after authentication.</li>
       <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Protect the proxy-to-app leg with mTLS or a shared secret.</li>
       <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Do not expose the app port directly to the internet.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Set <code>X-Auth-Assurance</code> if the identity is eID-verified. Otherwise the app labels it as proxy-authenticated.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Set <code>X-Auth-Assurance</code> honestly, or the app will label the identity as proxy-authenticated.</li>
     </ul>
   </div>
 </section>
