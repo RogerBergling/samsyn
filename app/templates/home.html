@@ -1,58 +1,57 @@
 {% extends "base.html" %}
-{% block title %}{{ app_name }} — verify who you're talking to{% endblock %}
+{% block title %}{{ app_name }} — {{ t("Verify who you're talking to.") }}{% endblock %}
 
 {% block content %}
 <section class="simple-hero">
-  <p class="eyebrow">Mutual verification</p>
-  <h1>Verify who you're talking to.</h1>
+  <p class="eyebrow">{{ t("Mutual verification") }}</p>
+  <h1>{{ t("Verify who you're talking to.") }}</h1>
   <p class="hero-lede">
-    Create a short verification, share the link, and compare the same code together.
-    It takes about a minute.
+    {{ t("Create a short verification, share the link, and compare the same code together. It takes about a minute.") }}
   </p>
 </section>
 
 <section class="action-grid" id="start">
   <div class="panel action-card">
     <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-phone"></use></svg></span>
-    <h2>Start a verification</h2>
-    <p>Create a link for the person you're talking to.</p>
+    <h2>{{ t("Start a verification") }}</h2>
+    <p>{{ t("Create a link for the person you're talking to.") }}</p>
 
     <form id="create-form" class="form" autocomplete="off">
       <button class="btn btn-primary btn-lg" type="submit" id="create-button">
-        Start verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        {{ t("Start verification") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
       </button>
 
       <details class="advanced">
-        <summary>Options</summary>
+        <summary>{{ t("Options") }}</summary>
         <div class="advanced-body">
           <label class="field">
-            <span>Type</span>
+            <span>{{ t("Type") }}</span>
             <select class="input" id="kind" name="kind">
-              <option value="one_to_one" selected>1:1 call</option>
-              <option value="customer_service">Customer service</option>
-              <option value="in_person">In person</option>
+              <option value="one_to_one" selected>{{ t("1:1 call") }}</option>
+              <option value="customer_service">{{ t("Customer service") }}</option>
+              <option value="in_person">{{ t("In person") }}</option>
             </select>
           </label>
           <label class="field">
-            <span>What is it for? <small>optional</small></span>
-            <input class="input" id="context" name="context" maxlength="200" placeholder="e.g. Apartment viewing">
+            <span>{{ t("What is it for?") }} <small>{{ t("optional") }}</small></span>
+            <input class="input" id="context" name="context" maxlength="200" placeholder="{{ t('e.g. Apartment viewing') }}">
           </label>
           <label class="field">
-            <span>Expires</span>
+            <span>{{ t("Expires") }}</span>
             <select class="input" id="duration" name="duration_minutes">
-              <option value="5" selected>5 minutes</option>
-              <option value="10">10 minutes</option>
-              <option value="15">15 minutes</option>
+              <option value="5" selected>{{ t("5 minutes") }}</option>
+              <option value="10">{{ t("10 minutes") }}</option>
+              <option value="15">{{ t("15 minutes") }}</option>
             </select>
           </label>
           <label class="field">
-            <span>Personal number</span>
+            <span>{{ t("Personal number") }}</span>
             <select class="input" id="pn-mode" name="pn_mode">
-              <option value="full" selected>Full number</option>
-              <option value="masked">Masked</option>
+              <option value="full" selected>{{ t("Full number") }}</option>
+              <option value="masked">{{ t("Masked") }}</option>
             </select>
           </label>
-          <p class="safety-note">Full personal numbers are sensitive. They are shown only inside this verification.</p>
+          <p class="safety-note">{{ t("Full personal numbers are sensitive. They are shown only inside this verification.") }}</p>
         </div>
       </details>
     </form>
@@ -60,23 +59,23 @@
 
   <div class="panel action-card" id="join">
     <span class="action-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-link"></use></svg></span>
-    <h2>Join a verification</h2>
-    <p>Paste the link you received.</p>
+    <h2>{{ t("Join a verification") }}</h2>
+    <p>{{ t("Paste the link you received.") }}</p>
 
     <form id="join-form" class="form">
       <label class="field">
-        <span class="sr-only">Invitation link</span>
-        <input class="input" id="join-input" placeholder="Paste invitation link" autocomplete="off" spellcheck="false">
+        <span class="sr-only">{{ t("Paste invitation link") }}</span>
+        <input class="input" id="join-input" placeholder="{{ t('Paste invitation link') }}" autocomplete="off" spellcheck="false">
       </label>
-      <button class="btn btn-lg" type="submit">Continue <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></button>
+      <button class="btn btn-lg" type="submit">{{ t("Continue") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></button>
     </form>
-    <p class="safety-note">The link works once and expires quickly.</p>
+    <p class="safety-note">{{ t("The link works once and expires quickly.") }}</p>
   </div>
 </section>
 
 <section class="recent-section" aria-labelledby="recent-title">
   <div class="section-head">
-    <h2 id="recent-title">Recent verifications</h2>
+    <h2 id="recent-title">{{ t("Recent verifications") }}</h2>
   </div>
   {% if recent %}
   <div class="recent-list">
@@ -88,30 +87,29 @@
         {% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg>{% endif %}
       </span>
       <span class="recent-body">
-        <strong>{{ item.other_name or 'Waiting for the other person' }}</strong>
-        <span>{{ item.kind_label }}{% if item.context %} · {{ item.context }}{% endif %}</span>
+        <strong>{{ item.other_name or t("Waiting for the other person") }}</strong>
+        <span>{{ t_kind(item.kind) }}{% if item.context %} · {{ item.context }}{% endif %}</span>
       </span>
-      <span class="pill {{ 'ok' if item.state == 'verified' else ('danger' if item.state in ['mismatch','expired','cancelled'] else 'accent') }}">{{ item.state_label }}</span>
+      <span class="pill {{ 'ok' if item.state == 'verified' else ('danger' if item.state in ['mismatch','expired','cancelled'] else 'accent') }}">{{ t_state(item.state) }}</span>
     </a>
     {% endfor %}
   </div>
   {% else %}
   <div class="empty-state">
     <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"></use></svg>
-    <p>No verifications yet.</p>
+    <p>{{ t("No verifications yet.") }}</p>
   </div>
   {% endif %}
 </section>
 
-<section class="simple-steps" aria-label="How it works">
-  <div><span>1</span><strong>Share the link</strong></div>
-  <div><span>2</span><strong>Compare the code</strong></div>
-  <div><span>3</span><strong>Both confirm</strong></div>
+<section class="simple-steps" aria-label="{{ t('How it works') }}">
+  <div><span>1</span><strong>{{ t("Share the link") }}</strong></div>
+  <div><span>2</span><strong>{{ t("Compare the code") }}</strong></div>
+  <div><span>3</span><strong>{{ t("Both confirm") }}</strong></div>
 </section>
-<p class="how-link"><a class="text-link" href="/how-it-works">What to share and what to do <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a></p>
+<p class="how-link"><a class="text-link" href="/how-it-works">{{ t("What to share and what to do") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a></p>
 
 <p class="privacy-note">
-  Only continue if you expected this call. The code confirms the session and the accounts;
-  it does not prove the voice on the call.
+  {{ t("Only continue if you expected this call. The code confirms the session and the accounts; it does not prove the voice on the call.") }}
 </p>
 {% endblock %}

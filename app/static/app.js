@@ -18,6 +18,47 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[ch]));
 
+  const I18N = (() => {
+    try {
+      return JSON.parse(document.getElementById('i18n')?.textContent || '{}');
+    } catch (e) {
+      return { lang: 'en', strings: {}, labels: {} };
+    }
+  })();
+
+  function t(key, vars) {
+    let text = (I18N.strings && I18N.strings[key]) || key;
+    if (vars) {
+      text = text.replace(/\{(\w+)\}/g, (match, name) => (
+        Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+      ));
+    }
+    return text;
+  }
+
+  function tLabel(group, code) {
+    return (I18N.labels && I18N.labels[group] && I18N.labels[group][code]) || code;
+  }
+
+  function isDev() {
+    return document.body.dataset.isDev === '1';
+  }
+
+  function assuranceLabel(code) {
+    const base = tLabel('assurance', code);
+    return isDev() ? `${base} ${I18N.lang === 'sv' ? '(test)' : '(mock)'}` : base;
+  }
+
+  function errorText(error) {
+    const code = error?.code || error?.data?.error?.code;
+    if (code) {
+      const key = `error.${code}`;
+      const text = t(key);
+      if (text !== key) return text;
+    }
+    return error?.message || t('error.generic');
+  }
+
   function csrf() {
     return $('meta[name="csrf-token"]')?.getAttribute('content') || '';
   }
@@ -40,6 +81,7 @@
     if (!response.ok) {
       const error = new Error(data?.error?.message || `Request failed (${response.status})`);
       error.status = response.status;
+      error.code = data?.error?.code;
       error.data = data;
       if (response.status === 401) {
         const isDev = document.body.dataset.isDev === '1';
@@ -102,7 +144,7 @@
     if (!value) return '—';
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+    return date.toLocaleString(I18N.lang === 'sv' ? 'sv-SE' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short' });
   }
 
   function secondsUntil(value) {
@@ -136,9 +178,9 @@
     const step3 = s === 'verified' ? 'done' : '';
     return `
       <div class="progress" aria-label="Verification progress">
-        <span class="step ${step1}"><span class="step-dot">1</span>Share</span>
-        <span class="step ${step2}"><span class="step-dot">2</span>Compare</span>
-        <span class="step ${step3}"><span class="step-dot">3</span>Done</span>
+        <span class="step ${step1}"><span class="step-dot">1</span>${t("Share")}</span>
+        <span class="step ${step2}"><span class="step-dot">2</span>${t("Compare")}</span>
+        <span class="step ${step3}"><span class="step-dot">3</span>${t("Done")}</span>
       </div>`;
   }
 
@@ -149,20 +191,20 @@
     if (showFull) {
       pnRow = `
         <div class="pn-row sensitive">
-          <span class="label">Personal number</span>
+          <span class="label">${t("Personal number")}</span>
           <strong>${esc(person.pn)}</strong>
-          <span class="pill danger">Sensitive</span>
-          <button class="btn btn-sm" type="button" data-action="toggle-pn">Hide</button>
+          <span class="pill danger">${t("Sensitive")}</span>
+          <button class="btn btn-sm" type="button" data-action="toggle-pn">${t("Hide")}</button>
         </div>`;
     } else {
       const reveal = person.is_me && person.can_reveal && !person.revealed
-        ? '<button class="btn btn-sm" type="button" data-action="reveal-pn">Share mine</button>'
+        ? `<button class="btn btn-sm" type="button" data-action="reveal-pn">${t("Share mine")}</button>`
         : '';
-      const notShared = !person.is_me && !person.pn ? '<span class="pill">Not shared</span>' : '';
-      const show = person.pn ? '<button class="btn btn-sm" type="button" data-action="toggle-pn">Show</button>' : '';
+      const notShared = !person.is_me && !person.pn ? `<span class="pill">${t("Not shared")}</span>` : '';
+      const show = person.pn ? `<button class="btn btn-sm" type="button" data-action="toggle-pn">${t("Show")}</button>` : '';
       pnRow = `
         <div class="pn-row">
-          <span class="label">Personal number</span>
+          <span class="label">${t("Personal number")}</span>
           <strong>${esc(person.pn_masked)}</strong>
           ${show}${reveal}${notShared}
         </div>`;
@@ -172,13 +214,13 @@
         <div class="identity-head">
           <span class="avatar">${esc(person.initials)}</span>
           <div>
-            <h3>${esc(person.name)} ${person.is_me ? '<span class="pill accent">You</span>' : ''}</h3>
-            <span class="muted">${esc(person.role_label)}${person.org ? ` · ${esc(person.org)}` : ''}</span>
+            <h3>${esc(person.name)} ${person.is_me ? '<span class="pill accent">' + t("You") + '</span>' : ''}</h3>
+            <span class="muted">${esc(tLabel("role", person.role))}${person.org ? ` · ${esc(person.org)}` : ''}</span>
           </div>
         </div>
         <div class="identity-meta">
-          <span class="pill ${assuranceClass(person.assurance)}">${esc(person.assurance_label)}</span>
-          ${person.revealed ? '<span class="pill ok">Shared full number</span>' : ''}
+          <span class="pill ${assuranceClass(person.assurance)}">${esc(assuranceLabel(person.assurance))}</span>
+          ${person.revealed ? '<span class="pill ok">' + t("Shared full number") + '</span>' : ''}
         </div>
         ${pnRow}
       </article>`;
@@ -188,59 +230,59 @@
     const words = (view.words || []).map((word) => `<span>${esc(word)}</span>`).join('');
     return `
       <div class="code-panel">
-        <p class="eyebrow">Verification code</p>
+        <p class="eyebrow">${t("Verification code")}</p>
         <div class="code-digits">${esc(view.code)}</div>
         <div class="code-words">${words}</div>
         <div class="countdown">
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg>
-          <span>Expires in <strong id="countdown">${fmtRemaining(secondsUntil(view.expires_at))}</strong></span>
+          <span>${t("Expires in")} <strong id="countdown">${fmtRemaining(secondsUntil(view.expires_at))}</strong></span>
         </div>
       </div>`;
   }
 
   function counterpartLabel(view) {
-    const map = { bob: 'Bob', alice: 'Alice', customer: 'Customer', agent: 'Agent Anna' };
-    return map[view.dev_counterpart] || view.dev_counterpart || 'other person';
+    const map = { bob: 'Bob', alice: 'Alice', customer: t('Customer'), agent: 'Agent Anna' };
+    return map[view.dev_counterpart] || view.dev_counterpart || t('other person');
   }
 
   function waiting(view) {
     const joinBlock = view.join_url
       ? `<div class="link-row">
            <input class="input" id="join-link" readonly value="${esc(view.join_url)}" aria-label="Invitation link">
-           <button class="btn" type="button" data-action="copy-link"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"></use></svg>Copy</button>
+           <button class="btn" type="button" data-action="copy-link"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"></use></svg>${t("Copy")}</button>
          </div>
-         <p class="safety-note">Share this link in the call chat. It works once and expires.</p>`
-      : '<p class="safety-note">The link is no longer available. Start a new verification.</p>';
+         <p class="safety-note">${t("Share this link in the call chat. It works once and expires.")}</p>`
+      : `<p class="safety-note">${t("The link is no longer available. Start a new verification.")}</p>`;
     const devButton = view.join_url && view.dev_counterpart
-      ? `<button class="btn" type="button" data-action="open-counterpart">Open as ${esc(counterpartLabel(view))}</button>`
+      ? `<button class="btn" type="button" data-action="open-counterpart">${t("Open as {name}", { name: counterpartLabel(view) })}</button>`
       : '';
     return `
       <div class="status-card warn">
         <span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg></span>
-        <div><h2>Waiting for the other person.</h2><p>Share the link below. The verification starts when they join.</p></div>
+        <div><h2>${t("Waiting for the other person.")}</h2><p>${t("Share the link below. The verification starts when they join.")}</p></div>
       </div>
       <div class="panel session-single">
         <div class="panel-head">
-          <div><p class="eyebrow">Your code</p><h2>Send this link.</h2></div>
-          <span class="pill warn">Waiting</span>
+          <div><p class="eyebrow">${t("Your code")}</p><h2>${t("Send this link.")}</h2></div>
+          <span class="pill warn">${t("Waiting")}</span>
         </div>
         ${codePanel(view)}
         ${joinBlock}
         <div class="session-help">
-          <strong>What happens next</strong>
+          <strong>${t("What happens next")}</strong>
           <ol>
-            <li>They open the link and join.</li>
-            <li>You both see the same name and code.</li>
-            <li>Read the code aloud. Both of you confirm.</li>
+            <li>${t("They open the link and join.")}</li>
+            <li>${t("You both see the same name and code.")}</li>
+            <li>${t("Read the code aloud. Both of you confirm.")}</li>
           </ol>
-          <p>Share the link, not the code. Anyone on the call can hear the code; it is not a password and expires.</p>
-          <a href="/how-it-works">How it works</a>
+          <p>${t("Share the link, not the code. Anyone on the call can hear the code; it is not a password and expires.")}</p>
+          <a href="/how-it-works">${t("How it works")}</a>
         </div>
         <div class="confirm-actions">
           ${devButton}
-          <button class="btn btn-danger" type="button" data-action="cancel">Cancel</button>
+          <button class="btn btn-danger" type="button" data-action="cancel">${t("Cancel")}</button>
         </div>
-        <p class="safety-note">You are signed in as ${esc(view.me.name)}.</p>
+        <p class="safety-note">${t("You are signed in as {name}.", { name: view.me.name })}</p>
       </div>`;
   }
 
@@ -250,28 +292,28 @@
     if (view.my_confirmed) {
       confirmBlock = `
         <div class="status-row">
-          <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>You confirmed</span>
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? 'And ' + esc(otherName) + ' confirmed' : 'Waiting for ' + esc(otherName)}</span>
+          <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>${t("You confirmed")}</span>
+          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? t("And {name} confirmed", { name: otherName }) : t("Waiting for {name}", { name: otherName })}</span>
         </div>
-        <p class="safety-note">Keep this page open until the result appears.</p>`;
+        <p class="safety-note">${t("Keep this page open until the result appears.")}</p>`;
     } else {
       confirmBlock = `
         <div class="status-row">
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? esc(otherName) + ' confirmed' : esc(otherName) + ' has not confirmed yet'}</span>
+          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? t("{name} confirmed", { name: otherName }) : t("{name} has not confirmed yet", { name: otherName })}</span>
         </div>
-        <label class="check-row"><input type="checkbox" id="confirm-code" ${state.compare.code ? 'checked' : ''}> I see the same code: <strong>${esc(view.code)}</strong></label>
-        <label class="check-row"><input type="checkbox" id="confirm-person" ${state.compare.person ? 'checked' : ''}> I confirm this is the person I am talking to.</label>
+        <label class="check-row"><input type="checkbox" id="confirm-code" ${state.compare.code ? 'checked' : ''}> ${t("I see the same code: {code}", { code: view.code })}</label>
+        <label class="check-row"><input type="checkbox" id="confirm-person" ${state.compare.person ? 'checked' : ''}> ${t("I confirm this is the person I am talking to.")}</label>
         <div class="confirm-actions">
-          <button class="btn btn-primary btn-lg" type="button" id="confirm-button" data-action="confirm" ${state.compare.code && state.compare.person ? '' : 'disabled'}>Confirm <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
-          <button class="btn btn-danger" type="button" data-action="mismatch">Something is wrong</button>
+          <button class="btn btn-primary btn-lg" type="button" id="confirm-button" data-action="confirm" ${state.compare.code && state.compare.person ? '' : 'disabled'}>${t("Confirm")} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
+          <button class="btn btn-danger" type="button" data-action="mismatch">${t("Something is wrong")}</button>
         </div>`;
     }
     return `
       <div class="session-grid">
         <div class="panel">
           <div class="panel-head">
-            <div><p class="eyebrow">Participants</p><h2>Who is in this session?</h2></div>
-            <span class="pill ${stateClass(view.state)}">${esc(view.state_label)}</span>
+            <div><p class="eyebrow">${t("Participants")}</p><h2>${t("Who is in this session?")}</h2></div>
+            <span class="pill ${stateClass(view.state)}">${esc(tLabel("state", view.state))}</span>
           </div>
           <div class="identity-grid">
             ${identityCard(view.me)}
@@ -279,23 +321,23 @@
           </div>
         </div>
         <div class="panel">
-          <p class="eyebrow">Compare</p>
-          <h2>Read the code aloud.</h2>
+          <p class="eyebrow">${t("Compare")}</p>
+          <h2>${t("Read the code aloud.")}</h2>
           ${codePanel(view)}
           <div class="session-help">
-            <strong>What to do</strong>
+            <strong>${t("What to do")}</strong>
             <ol>
-              <li>Read the code aloud.</li>
-              <li>Check that the name is the person you expected.</li>
-              <li>Both press Confirm.</li>
+              <li>${t("Read the code aloud.")}</li>
+              <li>${t("Check that the name is the person you expected.")}</li>
+              <li>${t("Both press Confirm.")}</li>
             </ol>
-            <p>Anyone on the call can hear the code. It is not a password and expires. Do not text or email it.</p>
-            <a href="/how-it-works">How it works</a>
+            <p>${t("Anyone on the call can hear the code. It is not a password and expires. Do not text or email it.")}</p>
+            <a href="/how-it-works">${t("How it works")}</a>
           </div>
-          <p class="safety-note">Only confirm if the name and code match.</p>
+          <p class="safety-note">${t("Only confirm if the name and code match.")}</p>
           <div class="confirm-panel">${confirmBlock}</div>
           <div class="confirm-actions">
-            <button class="btn btn-ghost btn-sm" type="button" data-action="cancel">Cancel</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-action="cancel">${t("Cancel")}</button>
           </div>
         </div>
       </div>`;
@@ -305,20 +347,20 @@
     const receipt = view.receipt;
     const receiptButtons = receipt
       ? `<div class="receipt-cta">
-           <a class="btn btn-primary" href="/receipts/${esc(receipt.id)}">Open receipt <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
-           <button class="btn" type="button" data-action="print"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>Save PDF</button>
-           <button class="btn btn-ghost" type="button" data-action="new-session">Start another</button>
+           <a class="btn btn-primary" href="/receipts/${esc(receipt.id)}">${t("Open receipt")} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+           <button class="btn" type="button" data-action="print"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>${t("Save PDF")}</button>
+           <button class="btn btn-ghost" type="button" data-action="new-session">${t("Start another")}</button>
          </div>`
-      : '<div class="receipt-cta"><button class="btn btn-primary" type="button" data-action="new-session">Start another verification</button></div>';
+      : `<div class="receipt-cta"><button class="btn btn-primary" type="button" data-action="new-session">${t("Start a new verification")}</button></div>`;
     return `
       <div class="panel verified-card">
         <div class="verified-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></div>
-        <h1>Verified.</h1>
-        <p class="muted">Both people confirmed the same session. A receipt is available.</p>
+        <h1>${t("Verified.")}</h1>
+        <p class="muted">${t("Both people confirmed the same session. A receipt is available.")}</p>
         ${receiptButtons}
       </div>
       <div class="panel">
-        <p class="eyebrow">Participants</p>
+        <p class="eyebrow">${t("Participants")}</p>
         <div class="identity-grid">${identityCard(view.me)}${identityCard(view.other)}</div>
       </div>`;
   }
@@ -327,39 +369,39 @@
     const info = {
       mismatch: {
         cls: 'danger',
-        title: 'Do not continue the call.',
-        text: 'The code or the person did not match. No receipt was created.',
+        title: t("Do not continue the call."),
+        text: t("The code or the person did not match. No receipt was created."),
       },
       expired: {
         cls: 'warn',
-        title: 'This verification expired.',
-        text: 'The time ran out before both people confirmed.',
+        title: t("This verification expired."),
+        text: t("The time ran out before both people confirmed."),
       },
       cancelled: {
         cls: 'warn',
-        title: 'This verification was cancelled.',
-        text: 'No receipt was created.',
+        title: t("This verification was cancelled."),
+        text: t("No receipt was created."),
       },
-    }[view.state] || { cls: 'warn', title: 'This verification is closed.', text: 'Start a new verification.' };
+    }[view.state] || { cls: 'warn', title: t("This verification is closed."), text: t("Start a new verification.") };
     return `
       <div class="status-card ${info.cls}">
         <span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${view.state === 'mismatch' ? 'warning' : 'clock'}"></use></svg></span>
         <div><h2>${info.title}</h2><p>${info.text}</p></div>
       </div>
       <div class="confirm-actions">
-        <button class="btn btn-primary" type="button" data-action="new-session">Start a new verification</button>
-        <a class="btn btn-ghost" href="/security">Safety</a>
+        <button class="btn btn-primary" type="button" data-action="new-session">${t("Start a new verification")}</button>
+        <a class="btn btn-ghost" href="/security">${t("Safety")}</a>
       </div>`;
   }
 
   function titleFor(view) {
-    if (view.state === 'waiting') return 'Share this verification.';
-    if (view.state === 'ready' || view.state === 'confirming') return 'Compare and confirm.';
-    if (view.state === 'verified') return 'Verified.';
-    if (view.state === 'mismatch') return 'Do not continue.';
-    if (view.state === 'expired') return 'Expired.';
-    if (view.state === 'cancelled') return 'Cancelled.';
-    return view.state_label;
+    if (view.state === 'waiting') return t("Share this verification.");
+    if (view.state === 'ready' || view.state === 'confirming') return t("Compare and confirm.");
+    if (view.state === 'verified') return t("Verified.");
+    if (view.state === 'mismatch') return t("Do not continue.");
+    if (view.state === 'expired') return t("Expired.");
+    if (view.state === 'cancelled') return t("Cancelled.");
+    return tLabel("state", view.state);
   }
 
   function renderSession(view) {
@@ -380,11 +422,11 @@
     root.innerHTML = `
       <div class="session-head">
         <div>
-          <p class="eyebrow">Verification · ${esc(view.public_ref)}</p>
+          <p class="eyebrow">${t("Verification")} · ${esc(view.public_ref)}</p>
           <h1>${esc(titleFor(view))}</h1>
           <div class="session-meta">
-            <span class="pill ${stateClass(view.state)}">${esc(view.state_label)}</span>
-            <span class="pill">${esc(view.kind_label)}</span>
+            <span class="pill ${stateClass(view.state)}">${esc(tLabel("state", view.state))}</span>
+            <span class="pill">${esc(tLabel("kind", view.kind))}</span>
             ${view.context ? `<span class="pill">${esc(view.context)}</span>` : ''}
           </div>
         </div>
@@ -444,7 +486,7 @@
         renderSession(next);
       }
     } catch (error) {
-      if (error.status !== 401) toast(error.message, 'danger');
+      if (error.status !== 401) toast(errorText(error), 'danger');
     } finally {
       state.busy = false;
     }
@@ -455,7 +497,7 @@
     if (loading) {
       button.dataset.original = button.innerHTML;
       button.disabled = true;
-      button.textContent = text || 'Working…';
+      button.textContent = text || t('Working…');
     } else {
       button.disabled = false;
       if (button.dataset.original) button.innerHTML = button.dataset.original;
@@ -470,9 +512,9 @@
         body: JSON.stringify({ decision, roster_version: state.session.roster_version }),
       });
       renderSession(data.session);
-      toast(decision === 'match' ? 'Confirmation recorded.' : 'The session was marked as a mismatch.', decision === 'match' ? 'ok' : 'danger');
+      toast(decision === 'match' ? t("Confirmation recorded.") : t("The session was marked as a mismatch."), decision === 'match' ? 'ok' : 'danger');
     } catch (error) {
-      toast(error.message, 'danger');
+      toast(errorText(error), 'danger');
     }
   }
 
@@ -481,9 +523,9 @@
     try {
       const data = await api(`/api/sessions/${state.session.id}/reveal`, { method: 'POST', body: '{}' });
       renderSession(data.session);
-      toast('Your full personal number is now shared with the other participant.', 'warn');
+      toast(t("Your full personal number is now shared with the other participant."), 'warn');
     } catch (error) {
-      toast(error.message, 'danger');
+      toast(errorText(error), 'danger');
     }
   }
 
@@ -493,30 +535,30 @@
       const data = await api(`/api/sessions/${state.session.id}/cancel`, { method: 'POST', body: '{}' });
       closeModal();
       renderSession(data.session);
-      toast('Session cancelled.', 'warn');
+      toast(t("Session cancelled."), 'warn');
     } catch (error) {
-      toast(error.message, 'danger');
+      toast(errorText(error), 'danger');
     }
   }
 
   function mismatchModal() {
     openModal(`
-      <h2>What is wrong?</h2>
-      <p class="muted">Reporting a mismatch closes the session immediately. No receipt will be created. If you are unsure, keep the session open and compare again.</p>
+      <h2>${t("What is wrong?")}</h2>
+      <p class="muted">${t("Reporting a mismatch closes the session immediately. No receipt will be created. If you are unsure, keep the session open and compare again.")}</p>
       <div class="modal-actions">
-        <button class="btn btn-danger" type="button" data-action="mismatch-reason">The code does not match</button>
-        <button class="btn btn-danger" type="button" data-action="mismatch-reason">The person is not who I expected</button>
-        <button class="btn" type="button" data-action="close-modal">Keep the session open</button>
+        <button class="btn btn-danger" type="button" data-action="mismatch-reason">${t("The code does not match")}</button>
+        <button class="btn btn-danger" type="button" data-action="mismatch-reason">${t("The person is not who I expected")}</button>
+        <button class="btn" type="button" data-action="close-modal">${t("Keep the session open")}</button>
       </div>`);
   }
 
   function cancelModal() {
     openModal(`
-      <h2>Cancel this session?</h2>
-      <p class="muted">The other participant will see that the session was cancelled. No receipt will be created.</p>
+      <h2>${t("Cancel this session?")}</h2>
+      <p class="muted">${t("The other participant will see that the session was cancelled. No receipt will be created.")}</p>
       <div class="modal-actions">
-        <button class="btn btn-danger" type="button" data-action="cancel-confirm">Cancel session</button>
-        <button class="btn" type="button" data-action="close-modal">Keep it open</button>
+        <button class="btn btn-danger" type="button" data-action="cancel-confirm">${t("Cancel session")}</button>
+        <button class="btn" type="button" data-action="close-modal">${t("Keep it open")}</button>
       </div>`);
   }
 
@@ -532,11 +574,11 @@
     }
     if (action === 'copy-link') {
       const link = state.session?.join_url;
-      copyText(link).then((ok) => toast(ok ? 'Invite link copied.' : 'Could not copy the link.', ok ? 'ok' : 'danger'));
+      copyText(link).then((ok) => toast(ok ? t("Invite link copied.") : t("Could not copy the link."), ok ? 'ok' : 'danger'));
       return;
     }
     if (action === 'copy') {
-      copyText(el.dataset.copy || '').then((ok) => toast(ok ? 'Copied.' : 'Could not copy.', ok ? 'ok' : 'danger'));
+      copyText(el.dataset.copy || '').then((ok) => toast(ok ? t("Copied.") : t("Could not copy."), ok ? 'ok' : 'danger'));
       return;
     }
     if (action === 'toggle-pn') {
@@ -609,12 +651,12 @@
           pn_mode: $('#pn-mode')?.value || 'full',
           duration_minutes: Number($('#duration')?.value || 5),
         };
-        setLoading(button, true, 'Creating…');
+        setLoading(button, true, t('Creating…'));
         try {
           const data = await api('/api/sessions', { method: 'POST', body: JSON.stringify(payload) });
           window.location.href = `/session/${data.id}`;
         } catch (error) {
-          toast(error.message, 'danger');
+          toast(errorText(error), 'danger');
           setLoading(button, false);
         }
       });
@@ -629,7 +671,7 @@
         if (raw.includes('/join/')) token = raw.split('/join/')[1];
         token = token.split('?')[0].split('#')[0].replace(/[^A-Za-z0-9_-]/g, '');
         if (!token) {
-          toast('Paste an invite link or token.', 'warn');
+          toast(t("Paste an invite link or token."), 'warn');
           return;
         }
         window.location.href = `/join/${encodeURIComponent(token)}`;
@@ -645,12 +687,12 @@
       const token = button.dataset.token;
       button.disabled = true;
       const original = button.innerHTML;
-      button.textContent = 'Joining…';
+      button.textContent = t("Joining…");
       try {
         await api(`/api/sessions/${sessionId}/join`, { method: 'POST', body: JSON.stringify({ token }) });
         window.location.href = `/session/${sessionId}`;
       } catch (error) {
-        toast(error.message, 'danger');
+        toast(errorText(error), 'danger');
         button.disabled = false;
         button.innerHTML = original;
       }
@@ -664,8 +706,8 @@
     api(`/api/sessions/${id}`)
       .then((data) => renderSession(data.session))
       .catch((error) => {
-        root.innerHTML = `<div class="status-card danger"><span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg></span><div><h2>Could not load this session.</h2><p>${esc(error.message)}</p></div></div>`;
-        toast(error.message, 'danger');
+        root.innerHTML = `<div class="status-card danger"><span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg></span><div><h2>${t("Could not load this session.")}</h2><p>${esc(errorText(error))}</p></div></div>`;
+        toast(errorText(error), 'danger');
       });
 
     document.addEventListener('visibilitychange', () => {

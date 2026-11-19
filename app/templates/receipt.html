@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Receipt {{ receipt.payload.reference }} · {{ app_name }}{% endblock %}
+{% block title %}{{ t("Receipt {ref}", ref=receipt.payload.reference) }} · {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="receipt-wrap">
   <div class="receipt-actions no-print">
-    <a class="btn btn-ghost" href="/">Back</a>
+    <a class="btn btn-ghost" href="/">{{ t("Back") }}</a>
     <button class="btn btn-primary" type="button" id="print-receipt">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>Save PDF
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>{{ t("Save PDF") }}
     </button>
   </div>
 
@@ -14,32 +14,32 @@
     <header class="receipt-head">
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-shield"></use></svg></span>
       <div>
-        <p class="eyebrow">Verification receipt</p>
+        <p class="eyebrow">{{ t("Verification receipt") }}</p>
         <h1>{{ receipt.payload.reference }}</h1>
-        <p class="muted">{{ receipt.payload.kind_label }}{% if receipt.payload.context %} · {{ receipt.payload.context }}{% endif %}</p>
+        <p class="muted">{{ t_kind(receipt.payload.kind) }}{% if receipt.payload.context %} · {{ receipt.payload.context }}{% endif %}</p>
       </div>
-      <span class="pill ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Verified</span>
+      <span class="pill ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Verified") }}</span>
     </header>
 
     <div class="receipt-status">
       <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>
       <div>
-        <strong>Both people confirmed the same session and each other's identity.</strong>
-        <span>{{ receipt.payload.verified_at|format_dt }}</span>
+        <strong>{{ t("Both people confirmed the same session and each other's identity.") }}</strong>
+        <span>{{ receipt.payload.verified_at|format_dt(lang) }}</span>
       </div>
     </div>
 
-    <h2>Participants</h2>
+    <h2>{{ t("Participants") }}</h2>
     <div class="receipt-participants">
       {% for p in receipt.payload.participants %}
       <div class="receipt-person">
         <span class="avatar">{{ initials(p.name) }}</span>
         <div>
           <strong>{{ p.name }}</strong>
-          <span class="muted">{{ p.role_label }}{% if p.org %} · {{ p.org }}{% endif %}</span>
+          <span class="muted">{{ t_role(p.role) }}{% if p.org %} · {{ p.org }}{% endif %}</span>
         </div>
         <div class="receipt-person-meta">
-          <span class="pill {{ 'ok' if p.assurance == 'eid_auth' else 'warn' }}">{{ p.assurance_label }}</span>
+          <span class="pill {{ 'ok' if p.assurance == 'eid_auth' else 'warn' }}">{{ t_assurance(p.assurance, is_dev) }}</span>
           <span class="mono muted">{{ p.pn_masked }}</span>
         </div>
       </div>
@@ -48,9 +48,7 @@
 
     <div class="callout compact">
       <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg>
-      <div>
-        This confirms that both accounts joined and confirmed the session. It does not verify the call audio or video.
-      </div>
+      <div>{{ t("This confirms that both accounts joined and confirmed the session. It does not verify the call audio or video.") }}</div>
     </div>
   </article>
 </section>

@@ -164,6 +164,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 .tool-btn:hover { color: var(--text); background: var(--panel-2); border-color: var(--line); }
 .tool-btn svg { width: 17px; height: 17px; }
+.lang-switch { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.lang-switch a { padding: 0.28rem 0.42rem; font-size: 0.62rem; font-weight: 650; letter-spacing: 0.04em; color: var(--dim); text-decoration: none; }
+.lang-switch a:hover { color: var(--text); background: var(--panel-2); text-decoration: none; }
+.lang-switch a.active { color: var(--text); background: var(--panel-2); }
 .tool-btn[aria-pressed="false"] { color: var(--dim); }
 .theme-toggle .icon-sun, .theme-toggle .icon-moon { display: none; }
 [data-theme="dark"] .theme-toggle .icon-sun { display: block; }

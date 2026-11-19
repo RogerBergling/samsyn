@@ -1,16 +1,15 @@
 {% extends "base.html" %}
-{% block title %}Sign in required · {{ app_name }}{% endblock %}
+{% block title %}{{ t("Sign in required") }} · {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="auth-wrap narrow">
   <div class="auth-copy">
-    <p class="eyebrow">Sign in required</p>
-    <h1>Open this app through your secure login.</h1>
+    <p class="eyebrow">{{ t("Sign in required") }}</p>
+    <h1>{{ t("Open this app through your secure login.") }}</h1>
     <p class="hero-lede">
-      Samsyn uses your existing secure login. If you reached this page directly,
-      return to the app link you were given and sign in there.
+      {{ t("Samsyn uses your existing secure login. If you reached this page directly, return to the app link you were given and sign in there.") }}
     </p>
-    <a class="btn btn-primary" href="/">Try again <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+    <a class="btn btn-primary" href="/">{{ t("Try again") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
   </div>
 </section>
 {% endblock %}

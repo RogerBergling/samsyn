@@ -1,31 +1,30 @@
 {% extends "base.html" %}
-{% block title %}Safety · {{ app_name }}{% endblock %}
+{% block title %}{{ t("Safety") }} · {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="page-head">
-  <p class="eyebrow">Safety</p>
-  <h1>What this app confirms.</h1>
+  <p class="eyebrow">{{ t("Safety") }}</p>
+  <h1>{{ t("What this app confirms.") }}</h1>
   <p class="hero-lede">
-    Samsyn confirms that both people joined the same verification and confirmed
-    each other's account. It does not verify the call itself.
+    {{ t("Samsyn confirms that both people joined the same verification and confirmed each other's account. It does not verify the call itself.") }}
   </p>
 </section>
 
 <section class="promise-grid">
   <div class="panel">
-    <h2>It confirms</h2>
+    <h2>{{ t("It confirms") }}</h2>
     <ul class="check-list">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both signed-in accounts joined the same session.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both people saw the same name and code.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both independently confirmed.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Both signed-in accounts joined the same session.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Both people saw the same name and code.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Both independently confirmed.") }}</li>
     </ul>
   </div>
   <div class="panel">
-    <h2>It does not confirm</h2>
+    <h2>{{ t("It does not confirm") }}</h2>
     <ul class="cross-list">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That the voice or video is authentic.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That a device or account is not compromised.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That everyone in a group call is present.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>{{ t("That the voice or video is authentic.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>{{ t("That a device or account is not compromised.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>{{ t("That everyone in a group call is present.") }}</li>
     </ul>
   </div>
 </section>
@@ -33,10 +32,10 @@
 <div class="callout warn">
   <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
   <div>
-    <strong>If the name or code is wrong, stop.</strong>
-    Do not continue the call based on this verification. Contact the person or company through a channel you already trust.
+    <strong>{{ t("If the name or code is wrong, stop.") }}</strong>
+    {{ t("Do not continue the call based on this verification. Contact the person or company through a channel you already trust.") }}
   </div>
 </div>
 
-<a class="text-link" href="/">Back to verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
+<a class="text-link" href="/">{{ t("Back to verification") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
 {% endblock %}

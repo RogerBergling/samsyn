@@ -178,6 +178,30 @@ class SamsynTests(unittest.TestCase):
         )
         self.assertEqual(status, 201, data)
 
+    def test_language_detection_and_switch(self) -> None:
+        client = self.client()
+        client.login("alice")
+
+        status, _, raw = client.get(
+            "/", headers={"Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8"}
+        )
+        self.assertEqual(status, 200)
+        text = raw.decode("utf-8")
+        self.assertIn('lang="sv"', text)
+        self.assertIn("Starta en verifiering", text)
+
+        status, _, raw = client.get("/lang/en?next=/")
+        self.assertEqual(status, 200)
+        text = raw.decode("utf-8")
+        self.assertIn('lang="en"', text)
+        self.assertIn("Start a verification", text)
+
+        status, _, raw = client.get("/lang/sv?next=/")
+        self.assertEqual(status, 200)
+        text = raw.decode("utf-8")
+        self.assertIn('lang="sv"', text)
+        self.assertIn("Starta en verifiering", text)
+
     def test_csrf_required(self) -> None:
         alice = self.client()
         alice.login("alice")

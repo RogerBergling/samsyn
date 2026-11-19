@@ -36,7 +36,7 @@ This design depends on the answers below. Each is marked as an assumption, not a
 | A6 | v1 does not integrate with a call platform (Teams, Zoom, Google Meet, telephony). The app is a separate browser tab/PWA. | The app cannot see the call participant list or verify the audio/video channel. |
 | A7 | Receipts are audit records, not legally binding signatures. BankID/Freja signing is an optional later phase. | Avoids overclaiming legal validity. |
 | A8 | Hosting is in the EU. v0.1 uses SQLite; Postgres/Redis are future scaling work. | Privacy and architecture. |
-| A9 | The v0.1 interface is English-first with Swedish code words; localization is a later task. | Copy, code words, accessibility. |
+| A9 | The interface supports Swedish and English; the server detects `Accept-Language` and the user can switch with SV/EN. | Copy, code words, accessibility. |
 | A10 | v1 covers 1:1, customer service and in-person. Group calls are designed but scheduled for phase 2. | Scope control. |
 
 **Resolved dependency:** the proxy authenticates both employees and external customers (D6). The remaining risk is whether its assurance is strong enough for the customer-service use case; label it honestly.

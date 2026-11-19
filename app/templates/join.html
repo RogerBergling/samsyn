@@ -1,27 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Join verification · {{ app_name }}{% endblock %}
+{% block title %}{{ t("Join verification") }} · {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="join-wrap single">
   <div class="join-copy">
-    <p class="eyebrow">Verification request</p>
-    <h1>{{ invite.initiator.name }} wants to verify you.</h1>
-    <p class="hero-lede">Only continue if you expected this call.</p>
+    <p class="eyebrow">{{ t("Verification request") }}</p>
+    <h1>{{ t("{name} wants to verify you.", name=invite.initiator.name) }}</h1>
+    <p class="hero-lede">{{ t("Only continue if you expected this call.") }}</p>
 
     <div class="identity-card large">
       <div class="identity-head">
         <span class="avatar avatar-lg">{{ invite.initiator.initials }}</span>
         <div>
           <h2>{{ invite.initiator.name }}</h2>
-          <span class="muted">{{ invite.initiator.org or 'Private individual' }}</span>
+          <span class="muted">{{ invite.initiator.org or t("Private individual") }}</span>
         </div>
       </div>
       <div class="identity-meta">
-        <span class="pill {{ 'ok' if invite.initiator.assurance == 'eid_auth' else 'warn' }}">{{ invite.initiator.assurance_label }}</span>
-        <span class="pill">{{ invite.kind_label }}</span>
+        <span class="pill {{ 'ok' if invite.initiator.assurance == 'eid_auth' else 'warn' }}">{{ t_assurance(invite.initiator.assurance, is_dev) }}</span>
+        <span class="pill">{{ t_kind(invite.kind) }}</span>
       </div>
       <div class="pn-row">
-        <span class="label">Personal number</span>
+        <span class="label">{{ t("Personal number") }}</span>
         <strong>{{ invite.initiator.pn_masked }}</strong>
       </div>
       {% if invite.context %}<p class="join-context">{{ invite.context }}</p>{% endif %}
@@ -30,23 +30,23 @@
     {% if invite.kind == 'customer_service' %}
     <div class="callout warn">
       <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
-      <div><strong>Never read a code to someone who called you.</strong> Continue only inside this app.</div>
+      <div><strong>{{ t("Never read a code to someone who called you.") }}</strong> {{ t("Continue only inside this app.") }}</div>
     </div>
     {% endif %}
 
     <p class="join-note">
-      You will see their name and a shared code. Compare the code on the call, then both confirm.
-      <a href="/how-it-works">How it works</a>
+      {{ t("You will see their name and a shared code. Compare the code on the call, then both confirm.") }}
+      <a href="/how-it-works">{{ t("How it works") }}</a>
     </p>
 
     <div class="join-actions">
       <button class="btn btn-primary btn-lg" type="button" id="join-button" data-session-id="{{ invite.verification_id }}" data-token="{{ token }}">
-        Continue <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
+        {{ t("Continue") }} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg>
       </button>
-      <a class="btn btn-ghost" href="/">Not now</a>
+      <a class="btn btn-ghost" href="/">{{ t("Not now") }}</a>
     </div>
-    <p class="safety-note">You are signed in as <strong>{{ user.display_name }}</strong>.</p>
-    <noscript><div class="callout danger">JavaScript is required to join.</div></noscript>
+    <p class="safety-note">{{ t("You are signed in as {name}.", name=user.display_name) }}</p>
+    <noscript><div class="callout danger">{{ t("JavaScript is required to join.") }}</div></noscript>
   </div>
 </section>
 {% endblock %}

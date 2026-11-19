@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from collections import defaultdict, deque
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -14,7 +15,7 @@ from urllib.parse import parse_qs, quote, urlparse
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from . import auth, db, security, verification
+from . import auth, db, i18n, security, verification
 from .config import Config
 from .verification import VerificationError
 
@@ -26,9 +27,17 @@ TEMPLATE_ENV = Environment(
     trim_blocks=True,
     lstrip_blocks=True,
 )
-def _format_datetime(value: Any) -> str:
+MONTHS = {
+    "en": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+    "sv": ("jan", "feb", "mar", "apr", "maj", "jun", "jul", "aug", "sep", "okt", "nov", "dec"),
+}
+
+
+def _format_datetime(value: Any, lang: str = "en") -> str:
     try:
-        return security.parse_iso(str(value)).strftime("%d %b %Y, %H:%M UTC")
+        dt = security.parse_iso(str(value))
+        month = MONTHS.get(lang, MONTHS["en"])[dt.month - 1]
+        return f"{dt.day:02d} {month} {dt.year}, {dt:%H:%M} UTC"
     except Exception:
         return str(value)
 
@@ -163,6 +172,8 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                     return self._login_page()
                 if path.startswith("/dev/"):
                     return self._dev_route(method, path)
+                if path.startswith("/lang/"):
+                    return self._set_language(path.rsplit("/", 1)[-1])
 
                 conn = db.connect(config)
                 try:
@@ -194,7 +205,7 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 self._handle_error(400, "invalid_input", str(exc), path)
             except Exception:
                 sys.stderr.write("unhandled error while processing request\n")
-                self._handle_error(500, "internal_error", "Something went wrong", path)
+                self._handle_error(500, "internal_error", "Something went wrong.", path)
 
         def _get_route(self, path: str, auth_ctx: auth.AuthContext, conn: Any) -> None:
             if path == "/":
@@ -322,6 +333,13 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 auth_ctx=auth_ctx,
                 receipt=receipt,
             )
+
+        def _set_language(self, value: str) -> None:
+            code = i18n.normalize_language(value)
+            if code:
+                self._pending_cookies.append(i18n.cookie_header(config, code))
+            next_url = security.safe_next(self._query.get("next", ["/"])[0])
+            return self._redirect(next_url)
 
         def _logout(self, auth_ctx: auth.AuthContext) -> None:
             sid = auth._cookie_sid(self, config)
@@ -615,7 +633,32 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
         # Response helpers
         # ------------------------------------------------------------------
 
+        def _language(self) -> str:
+            raw = self.headers.get("Cookie")
+            cookie_value = None
+            if raw:
+                jar = SimpleCookie()
+                try:
+                    jar.load(raw)
+                    morsel = jar.get(i18n.COOKIE_NAME)
+                    cookie_value = morsel.value if morsel else None
+                except Exception:
+                    cookie_value = None
+            return i18n.detect_language(cookie_value, self.headers.get("Accept-Language"))
+
         def _render(self, template: str, status: int, **context: Any) -> None:
+            lang = context.pop("lang", None) or self._language()
+            context.setdefault("lang", lang)
+            context.setdefault("t", lambda key, **kwargs: i18n.translate(lang, key, **kwargs))
+            context.setdefault("t_kind", lambda code: i18n.label(lang, "kind", code))
+            context.setdefault("t_state", lambda code: i18n.label(lang, "state", code))
+            context.setdefault("t_role", lambda code: i18n.label(lang, "role", code))
+            context.setdefault(
+                "t_assurance",
+                lambda code, mock=False: i18n.assurance(lang, code, mock),
+            )
+            context.setdefault("i18n_payload", i18n.payload(lang))
+            context.setdefault("current_path", self.path)
             context.setdefault("auth_mode", config.auth_mode)
             context.setdefault("is_dev", config.auth_mode == "dev")
             context.setdefault("app_name", config.app_name)
@@ -671,11 +714,11 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                     status, {"error": {"code": code, "message": message}}
                 )
             if status == 403:
-                message = "You do not have access to this resource."
+                message = "Access denied."
             elif status == 404:
-                message = "This page or verification could not be found."
+                message = "Not found."
             elif status == 410:
-                message = "This invite link has expired or has already been used."
+                message = "Expired."
             return self._render(
                 "error.html",
                 status,
@@ -703,6 +746,8 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", cache)
+            if content_type.startswith("text/html"):
+                self.send_header("Vary", "Accept-Language, Cookie")
             for cookie in self._pending_cookies:
                 self.send_header("Set-Cookie", cookie)
             for name, value in (headers or {}).items():

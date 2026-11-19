@@ -19,8 +19,11 @@
 
   function updateThemeButton(button) {
     const isDark = root.dataset.theme === 'dark';
-    button.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
-    button.setAttribute('title', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+    const label = isDark
+      ? (button.dataset.darkLabel || 'Switch to light theme')
+      : (button.dataset.lightLabel || 'Switch to dark theme');
+    button.setAttribute('aria-label', label);
+    button.setAttribute('title', label);
   }
 
   document.addEventListener('DOMContentLoaded', () => {

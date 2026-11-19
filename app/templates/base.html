@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="{{ lang }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ app_name }}{% endblock %}</title>
-  <meta name="description" content="Samsyn — verify who you are talking to.">
+  <meta name="description" content="{{ t("Verify who you're talking to.") }}">
   <meta name="color-scheme" content="dark light">
   <meta name="theme-color" id="theme-color" content="#070b14">
   <meta name="csrf-token" content="{{ csrf_token }}">
@@ -14,7 +14,7 @@
   <script src="/static/app.js" defer></script>
 </head>
 <body data-auth-mode="{{ auth_mode }}" data-is-dev="{{ '1' if is_dev else '0' }}">
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main">{{ t("Skip to content") }}</a>
 
   <svg class="svg-sprite" aria-hidden="true" focusable="false">
     <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -107,30 +107,34 @@
       <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-shield"></use></svg></span>
       <span class="brand-text">
         <strong>{{ app_name }}</strong>
-        <span>Verify who you're talking to</span>
+        <span>{{ t("Verify who you're talking to") }}</span>
       </span>
     </a>
 
     {% if user %}
-    <nav class="nav" aria-label="Main">
-      <a href="/">Home</a>
-      <a href="/how-it-works">How it works</a>
-      <a href="/security">Safety</a>
+    <nav class="nav" aria-label="{{ t('Main') }}">
+      <a href="/">{{ t("Home") }}</a>
+      <a href="/how-it-works">{{ t("How it works") }}</a>
+      <a href="/security">{{ t("Safety") }}</a>
     </nav>
     {% endif %}
 
     <div class="topbar-tools">
       {% if is_dev %}<span class="pill warn dev-pill">DEV</span>{% endif %}
-      <button class="tool-btn theme-toggle" id="theme-toggle" type="button" title="Switch theme" aria-label="Switch theme">
+      <div class="lang-switch" role="group" aria-label="{{ t('Language') }}">
+        <a href="/lang/sv?next={{ current_path|urlencode }}" class="{{ 'active' if lang == 'sv' else '' }}" hreflang="sv" lang="sv" title="Svenska">SV</a>
+        <a href="/lang/en?next={{ current_path|urlencode }}" class="{{ 'active' if lang == 'en' else '' }}" hreflang="en" lang="en" title="English">EN</a>
+      </div>
+      <button class="tool-btn theme-toggle" id="theme-toggle" type="button" title="{{ t('Switch theme') }}" aria-label="{{ t('Switch theme') }}" data-dark-label="{{ t('Switch to light theme') }}" data-light-label="{{ t('Switch to dark theme') }}">
         <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sun"></use></svg>
         <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg>
       </button>
       {% if user %}
-      <a class="user-chip" href="/logout" title="Sign out">
+      <a class="user-chip" href="/logout" title="{{ t('Sign out') }}">
         <span class="avatar">{{ initials(user.display_name) }}</span>
         <span class="user-chip-text">
           <strong>{{ user.display_name }}</strong>
-          <span>{{ assurance_label(user.assurance, is_dev) }}</span>
+          <span>{{ t_assurance(user.assurance, is_dev) }}</span>
         </span>
       </a>
       {% endif %}
@@ -141,11 +145,11 @@
     </div>
 
     {% if user %}
-    <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile" hidden>
-      <a href="/">Home</a>
-      <a href="/how-it-works">How it works</a>
-      <a href="/security">Safety</a>
-      <a href="/logout">Sign out</a>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="{{ t('Mobile') }}" hidden>
+      <a href="/">{{ t("Home") }}</a>
+      <a href="/how-it-works">{{ t("How it works") }}</a>
+      <a href="/security">{{ t("Safety") }}</a>
+      <a href="/logout">{{ t("Sign out") }}</a>
     </nav>
     {% endif %}
   </header>
@@ -160,26 +164,27 @@
         <span class="brand-mark small" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-shield"></use></svg></span>
         <div>
           <strong>{{ app_name }}</strong>
-          <p>Verify who you're talking to.</p>
+          <p>{{ t("Verify who you're talking to.") }}</p>
         </div>
       </div>
       <div class="footer-links">
-        <a href="/how-it-works">How it works</a>
-        <a href="/security">Safety</a>
+        <a href="/how-it-works">{{ t("How it works") }}</a>
+        <a href="/security">{{ t("Safety") }}</a>
         <a href="{{ github_url }}" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-github"></use></svg> GitHub</a>
       </div>
     </div>
     <div class="footer-note">
-      <span>No trackers. No password login.</span>
+      <span>{{ t("No trackers. No password login.") }}</span>
       <span>v{{ version }}</span>
     </div>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
   <div id="modal-root"></div>
+  <script type="application/json" id="i18n">{{ i18n_payload|tojson }}</script>
 
   <noscript>
-    <div class="noscript"><strong>JavaScript is required</strong> for the live verification session.</div>
+    <div class="noscript"><strong>JavaScript</strong> {{ t("JavaScript is required for the live verification session.") }}</div>
   </noscript>
 </body>
 </html>

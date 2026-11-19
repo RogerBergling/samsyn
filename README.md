@@ -13,6 +13,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 ## What is in the app
 
 - Server-rendered pages with a dark/light theme, a simple two-action home screen, and responsive layout.
+- Swedish and English UI. The server detects `Accept-Language` on first visit; the user can switch with **SV / EN** and the choice is remembered in a cookie.
 - Real server-side sessions, SQLite persistence, CSRF protection, rate limits, and audit events.
 - Proxy-header authentication (`X-User-Id`, `X-Name`, `X-Last-Name`, `X-Person-Id`).
 - A development mode with mock identities for local testing.
@@ -188,6 +189,7 @@ The suite covers:
 
 - health and dev login,
 - CSRF enforcement and origin acceptance/rejection,
+- Swedish/English language detection and SV/EN switching,
 - forged `X-User-Id` ignored in dev,
 - full create/join/confirm/receipt flow,
 - single-use join tokens and IDOR,
