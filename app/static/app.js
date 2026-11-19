@@ -131,15 +131,14 @@
 
   function progress(view) {
     const s = view.state;
-    const step2 = s !== 'waiting' ? 'done' : 'active';
-    const step3 = s === 'verified' ? 'done' : (s === 'ready' || s === 'confirming' ? 'active' : (s === 'waiting' ? '' : 'active'));
-    const step4 = s === 'verified' ? 'done' : '';
+    const step1 = s === 'waiting' ? 'active' : 'done';
+    const step2 = s === 'verified' ? 'done' : (s === 'ready' || s === 'confirming' ? 'active' : (s === 'waiting' ? '' : 'done'));
+    const step3 = s === 'verified' ? 'done' : '';
     return `
       <div class="progress" aria-label="Verification progress">
-        <span class="step done"><span class="step-dot">✓</span>Created</span>
-        <span class="step ${step2}"><span class="step-dot">2</span>Joined</span>
-        <span class="step ${step3}"><span class="step-dot">3</span>Compare</span>
-        <span class="step ${step4}"><span class="step-dot">4</span>Verified</span>
+        <span class="step ${step1}"><span class="step-dot">1</span>Share</span>
+        <span class="step ${step2}"><span class="step-dot">2</span>Compare</span>
+        <span class="step ${step3}"><span class="step-dot">3</span>Done</span>
       </div>`;
   }
 
@@ -207,46 +206,36 @@
   function waiting(view) {
     const joinBlock = view.join_url
       ? `<div class="link-row">
-           <input class="input" id="join-link" readonly value="${esc(view.join_url)}" aria-label="Invite link">
+           <input class="input" id="join-link" readonly value="${esc(view.join_url)}" aria-label="Invitation link">
            <button class="btn" type="button" data-action="copy-link"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"></use></svg>Copy</button>
          </div>
-         <p class="session-note">Share this link in the call chat. It is single-use and expires. Do not read the join link aloud.</p>`
-      : '<p class="session-note">The invite link is no longer available. Start a new session.</p>';
+         <p class="safety-note">Share this link in the call chat. It works once and expires.</p>`
+      : '<p class="safety-note">The link is no longer available. Start a new verification.</p>';
     const devButton = view.join_url && view.dev_counterpart
-      ? `<button class="btn" type="button" data-action="open-counterpart"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-external"></use></svg>Open as ${esc(counterpartLabel(view))}</button>`
+      ? `<button class="btn" type="button" data-action="open-counterpart">Open as ${esc(counterpartLabel(view))}</button>`
       : '';
     return `
       <div class="status-card warn">
         <span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg></span>
-        <div><h2>Waiting for the other person.</h2><p>The session is live but not verified. The code is not a secret yet — both people must join first.</p></div>
+        <div><h2>Waiting for the other person.</h2><p>Share the link below. The verification starts when they join.</p></div>
       </div>
-      <div class="session-grid">
-        <div class="panel">
-          <div class="panel-head">
-            <div><p class="eyebrow">Invite</p><h2>Share this session.</h2></div>
-            <span class="pill ${stateClass(view.state)}">${esc(view.state_label)}</span>
-          </div>
-          ${codePanel(view)}
-          ${joinBlock}
-          <div class="confirm-actions">
-            ${devButton}
-            <button class="btn btn-danger" type="button" data-action="cancel">Cancel session</button>
-          </div>
+      <div class="panel session-single">
+        <div class="panel-head">
+          <div><p class="eyebrow">Your code</p><h2>Send this link.</h2></div>
+          <span class="pill warn">Waiting</span>
         </div>
-        <div class="panel">
-          <p class="eyebrow">Participants</p>
-          <div class="identity-grid">
-            ${identityCard(view.me)}
-            <div class="waiting-ghost"><span class="avatar">?</span><span>Waiting for the other participant to join…</span></div>
-          </div>
-          <p class="session-note"><strong>What happens next:</strong> when the other person joins, you will both see each other’s identity and the same code. Compare it over the call, then each of you confirms.</p>
+        ${codePanel(view)}
+        ${joinBlock}
+        <div class="confirm-actions">
+          ${devButton}
+          <button class="btn btn-danger" type="button" data-action="cancel">Cancel</button>
         </div>
+        <p class="safety-note">You are signed in as ${esc(view.me.name)}.</p>
       </div>`;
   }
 
   function compare(view) {
     const otherName = view.other ? view.other.name : 'the other person';
-    const both = view.my_confirmed && view.other_confirmed;
     let confirmBlock;
     if (view.my_confirmed) {
       confirmBlock = `
@@ -254,22 +243,20 @@
           <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>You confirmed</span>
           <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? 'And ' + esc(otherName) + ' confirmed' : 'Waiting for ' + esc(otherName)}</span>
         </div>
-        <div class="callout compact">You confirmed this session. The other participant must confirm independently. Do not close this tab until the result is shown.</div>`;
+        <p class="safety-note">Keep this page open until the result appears.</p>`;
     } else {
       confirmBlock = `
         <div class="status-row">
           <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? esc(otherName) + ' confirmed' : esc(otherName) + ' has not confirmed yet'}</span>
-          <span class="status-chip pending">You have not confirmed yet</span>
         </div>
-        <label class="check-row"><input type="checkbox" id="confirm-code" ${state.compare.code ? 'checked' : ''}> I see the same code: <strong>${esc(view.code)}</strong> and the same words.</label>
+        <label class="check-row"><input type="checkbox" id="confirm-code" ${state.compare.code ? 'checked' : ''}> I see the same code: <strong>${esc(view.code)}</strong></label>
         <label class="check-row"><input type="checkbox" id="confirm-person" ${state.compare.person ? 'checked' : ''}> I confirm this is the person I am talking to.</label>
         <div class="confirm-actions">
-          <button class="btn btn-primary btn-lg" type="button" id="confirm-button" data-action="confirm" ${state.compare.code && state.compare.person ? '' : 'disabled'}>Confirm verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
+          <button class="btn btn-primary btn-lg" type="button" id="confirm-button" data-action="confirm" ${state.compare.code && state.compare.person ? '' : 'disabled'}>Confirm <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
           <button class="btn btn-danger" type="button" data-action="mismatch">Something is wrong</button>
         </div>`;
     }
     return `
-      ${both ? '' : `<div class="status-card accent"><span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"></use></svg></span><div><h2>Compare the code, then confirm.</h2><p>Read the code aloud. Check that the name and assurance label match the person you expected. Both sides must confirm.</p></div></div>`}
       <div class="session-grid">
         <div class="panel">
           <div class="panel-head">
@@ -280,16 +267,15 @@
             ${identityCard(view.me)}
             ${identityCard(view.other)}
           </div>
-          <p class="session-note"><strong>Check the name, not just the code.</strong> A matching code proves you are in the same session. The identity cards are what make a relay or a wrong person visible.</p>
         </div>
         <div class="panel">
           <p class="eyebrow">Compare</p>
+          <h2>Read the code aloud.</h2>
           ${codePanel(view)}
-          <div class="confirm-panel">
-            ${confirmBlock}
-          </div>
+          <p class="safety-note">Only confirm if the name and code match.</p>
+          <div class="confirm-panel">${confirmBlock}</div>
           <div class="confirm-actions">
-            <button class="btn btn-ghost btn-sm" type="button" data-action="cancel">Cancel session</button>
+            <button class="btn btn-ghost btn-sm" type="button" data-action="cancel">Cancel</button>
           </div>
         </div>
       </div>`;
@@ -300,35 +286,20 @@
     const receiptButtons = receipt
       ? `<div class="receipt-cta">
            <a class="btn btn-primary" href="/receipts/${esc(receipt.id)}">Open receipt <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
-           <a class="btn" href="/api/receipts/${esc(receipt.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-download"></use></svg>Download JSON</a>
-           <button class="btn" type="button" data-action="print"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>Print</button>
+           <button class="btn" type="button" data-action="print"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-print"></use></svg>Save PDF</button>
+           <button class="btn btn-ghost" type="button" data-action="new-session">Start another</button>
          </div>`
-      : '';
+      : '<div class="receipt-cta"><button class="btn btn-primary" type="button" data-action="new-session">Start another verification</button></div>';
     return `
       <div class="panel verified-card">
         <div class="verified-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></div>
-        <p class="eyebrow">Both sides confirmed</p>
         <h1>Verified.</h1>
-        <p class="muted">The account identities and the session code matched. A receipt is available for both participants.</p>
+        <p class="muted">Both people confirmed the same session. A receipt is available.</p>
         ${receiptButtons}
       </div>
-      <div class="session-grid">
-        <div class="panel">
-          <p class="eyebrow">Participants</p>
-          <div class="identity-grid">${identityCard(view.me)}${identityCard(view.other)}</div>
-        </div>
-        <div class="panel">
-          <p class="eyebrow">Session</p>
-          <dl class="kv">
-            <div><dt>Reference</dt><dd class="mono">${esc(view.public_ref)}</dd></div>
-            <div><dt>Type</dt><dd>${esc(view.kind_label)}</dd></div>
-            ${view.context ? `<div><dt>Context</dt><dd>${esc(view.context)}</dd></div>` : ''}
-            <div><dt>Verified at</dt><dd class="mono">${esc(fmtDate(view.completed_at))}</dd></div>
-          </dl>
-          <div class="confirm-actions">
-            <button class="btn btn-ghost" type="button" data-action="new-session">Start another verification</button>
-          </div>
-        </div>
+      <div class="panel">
+        <p class="eyebrow">Participants</p>
+        <div class="identity-grid">${identityCard(view.me)}${identityCard(view.other)}</div>
       </div>`;
   }
 
@@ -337,46 +308,32 @@
       mismatch: {
         cls: 'danger',
         title: 'Do not continue the call.',
-        text: 'The code or the person did not match. This session is closed and no receipt was created.',
+        text: 'The code or the person did not match. No receipt was created.',
       },
       expired: {
         cls: 'warn',
         title: 'This verification expired.',
-        text: 'The session reached its time limit before both participants confirmed. Start a new one.',
+        text: 'The time ran out before both people confirmed.',
       },
       cancelled: {
         cls: 'warn',
         title: 'This verification was cancelled.',
-        text: 'No receipt was created. Start a new session if you still need to verify.',
+        text: 'No receipt was created.',
       },
-    }[view.state] || { cls: 'warn', title: 'This session is closed.', text: 'Start a new verification.' };
+    }[view.state] || { cls: 'warn', title: 'This verification is closed.', text: 'Start a new verification.' };
     return `
       <div class="status-card ${info.cls}">
         <span class="status-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${view.state === 'mismatch' ? 'warning' : 'clock'}"></use></svg></span>
         <div><h2>${info.title}</h2><p>${info.text}</p></div>
       </div>
-      <div class="session-grid">
-        <div class="panel">
-          <p class="eyebrow">Participants</p>
-          <div class="identity-grid">${identityCard(view.me)}${identityCard(view.other)}</div>
-        </div>
-        <div class="panel">
-          <p class="eyebrow">Session</p>
-          <dl class="kv">
-            <div><dt>Reference</dt><dd class="mono">${esc(view.public_ref)}</dd></div>
-            <div><dt>State</dt><dd>${esc(view.state_label)}</dd></div>
-            ${view.context ? `<div><dt>Context</dt><dd>${esc(view.context)}</dd></div>` : ''}
-          </dl>
-          <div class="confirm-actions">
-            <button class="btn btn-primary" type="button" data-action="new-session">Start a new verification</button>
-            <a class="btn btn-ghost" href="/security">Security model</a>
-          </div>
-        </div>
+      <div class="confirm-actions">
+        <button class="btn btn-primary" type="button" data-action="new-session">Start a new verification</button>
+        <a class="btn btn-ghost" href="/security">Safety</a>
       </div>`;
   }
 
   function titleFor(view) {
-    if (view.state === 'waiting') return 'Wait for the other person.';
+    if (view.state === 'waiting') return 'Share this verification.';
     if (view.state === 'ready' || view.state === 'confirming') return 'Compare and confirm.';
     if (view.state === 'verified') return 'Verified.';
     if (view.state === 'mismatch') return 'Do not continue.';
@@ -411,7 +368,6 @@
             ${view.context ? `<span class="pill">${esc(view.context)}</span>` : ''}
           </div>
         </div>
-        <button class="btn btn-ghost" type="button" data-action="new-session">New verification</button>
       </div>
       ${progress(view)}
       ${body}`;
@@ -554,12 +510,6 @@
       closeModal();
       return;
     }
-    if (action === 'mode') {
-      $$('.choice[data-mode]').forEach((button) => button.classList.toggle('active', button === el));
-      const input = $('#kind-input');
-      if (input) input.value = el.dataset.mode || 'one_to_one';
-      return;
-    }
     if (action === 'copy-link') {
       const link = state.session?.join_url;
       copyText(link).then((ok) => toast(ok ? 'Invite link copied.' : 'Could not copy the link.', ok ? 'ok' : 'danger'));
@@ -614,9 +564,6 @@
       window.print();
       return;
     }
-    if (action === 'security-test') {
-      runSecurityTest();
-    }
   }
 
   function handleChange(event) {
@@ -637,9 +584,9 @@
         event.preventDefault();
         const button = $('#create-button');
         const payload = {
-          kind: $('#kind-input')?.value || 'one_to_one',
+          kind: $('#kind')?.value || 'one_to_one',
           context: $('#context')?.value || '',
-          pn_mode: form.querySelector('input[name="pn_mode"]:checked')?.value || 'full',
+          pn_mode: $('#pn-mode')?.value || 'full',
           duration_minutes: Number($('#duration')?.value || 5),
         };
         setLoading(button, true, 'Creating…');
@@ -712,85 +659,9 @@
     });
   }
 
-  function initSecurity() {
-    const button = $('#security-test');
-    if (!button) return;
-    button.addEventListener('click', runSecurityTest);
-  }
-
-  async function runSecurityTest() {
-    const button = $('#security-test');
-    const result = $('#security-result');
-    if (!button || !result) return;
-    button.disabled = true;
-    try {
-      const data = await api('/api/security-check', {
-        headers: { 'X-User-Id': 'u-forged-attacker' },
-      });
-      result.hidden = false;
-      result.textContent = JSON.stringify(data, null, 2);
-    } catch (error) {
-      toast(error.message, 'danger');
-    } finally {
-      button.disabled = false;
-    }
-  }
-
   function initReceipt() {
     const button = $('#print-receipt');
     if (button) button.addEventListener('click', () => window.print());
-  }
-
-  function initMatrix() {
-    const canvas = $('#matrix');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const fontSize = 14;
-    const chars = '01ABCDEF{}[]<>/\\=+*#$%&';
-    let columns = 0;
-    let drops = [];
-    let width = 0;
-    let height = 0;
-    let cleared = false;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    function resize() {
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = width;
-      canvas.height = height;
-      columns = Math.max(1, Math.floor(width / fontSize));
-      drops = Array.from({ length: columns }, () => Math.random() * (height / fontSize));
-      cleared = false;
-    }
-
-    function draw() {
-      if (!ctx) return;
-      const off = document.documentElement.dataset.matrix === 'off' || reduced || document.hidden;
-      if (off) {
-        if (!cleared) { ctx.clearRect(0, 0, width, height); cleared = true; }
-        return;
-      }
-      cleared = false;
-      const light = document.documentElement.dataset.theme === 'light';
-      ctx.fillStyle = light ? 'rgba(244,247,252,0.12)' : 'rgba(7,11,20,0.08)';
-      ctx.fillRect(0, 0, width, height);
-      const rgb = getComputedStyle(document.documentElement).getPropertyValue('--matrix-rgb').trim() || '56, 189, 248';
-      ctx.fillStyle = `rgba(${rgb},0.5)`;
-      ctx.font = `${fontSize}px monospace`;
-      for (let i = 0; i < columns; i += 1) {
-        const char = chars[Math.floor(Math.random() * chars.length)];
-        const x = i * fontSize;
-        const y = drops[i] * fontSize;
-        ctx.fillText(char, x, y);
-        if (y > height && Math.random() > 0.975) drops[i] = 0;
-        drops[i] += 1;
-      }
-    }
-
-    resize();
-    window.addEventListener('resize', resize);
-    setInterval(draw, 70);
   }
 
   document.addEventListener('click', handleAction);
@@ -799,8 +670,6 @@
     initHome();
     initJoin();
     initSession();
-    initSecurity();
     initReceipt();
-    initMatrix();
   });
 })();

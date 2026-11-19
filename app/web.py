@@ -26,6 +26,13 @@ TEMPLATE_ENV = Environment(
     trim_blocks=True,
     lstrip_blocks=True,
 )
+def _format_datetime(value: Any) -> str:
+    try:
+        return security.parse_iso(str(value)).strftime("%d %b %Y, %H:%M UTC")
+    except Exception:
+        return str(value)
+
+
 TEMPLATE_ENV.globals.update(
     initials=security.initials,
     kind_label=security.kind_label,
@@ -33,6 +40,7 @@ TEMPLATE_ENV.globals.update(
     assurance_label=security.assurance_label,
     role_label=security.role_label,
 )
+TEMPLATE_ENV.filters["format_dt"] = _format_datetime
 
 
 class AppError(Exception):

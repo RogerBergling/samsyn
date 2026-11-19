@@ -2,7 +2,7 @@
 
 **Status:** v0.1 implementation — working app, container, and GHCR pipeline.  
 **Working name:** Samsyn. It is **not trademark-cleared**; see [docs/naming.md](docs/naming.md).  
-**Design:** dark “control room” theme inspired by [apps.bergling.net](https://apps.bergling.net).
+**Design:** dark, clear interface inspired by [apps.bergling.net](https://apps.bergling.net), simplified for end users.
 
 Samsyn is a web app for **mutual verification between people in a call**. Two authenticated people join a short session, see each other’s identity and assurance level, compare a per-session code, and independently confirm. The result is an integrity-protected receipt.
 
@@ -12,7 +12,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 
 ## What is in the app
 
-- Server-rendered pages with a dark/light theme, matrix background, terminal panels, and responsive layout.
+- Server-rendered pages with a dark/light theme, a simple two-action home screen, and responsive layout.
 - Real server-side sessions, SQLite persistence, CSRF protection, rate limits, and audit events.
 - Proxy-header authentication (`X-User-Id`, `X-Name`, `X-Last-Name`, `X-Person-Id`).
 - A development mode with mock identities for local testing.
@@ -21,7 +21,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 - Both participants must confirm; one-sided confirmation never verifies.
 - Full personal number display as a controlled “sensitive” view, encrypted at rest, never logged, never written to receipts.
 - Receipts with HMAC-SHA256 integrity, JSON download, and print/PDF.
-- A security page with a live “forged header” demonstration.
+- A plain-language Safety page explaining what is and is not verified.
 - Dockerfile, Compose files, CI, and a GitHub Actions workflow that publishes to GHCR.
 
 Group verification is deliberately not in v0.1. The data model and design leave room for it, but group roster verification needs its own phase.
@@ -203,7 +203,7 @@ app/
   security.py        tokens, encryption, masking, HMAC, validation
   web.py             HTTP server, routes, security headers, rate limits
   templates/         Jinja2 pages
-  static/            design-system CSS, theme, matrix, app JS, favicon
+  static/            design-system CSS, theme, app JS, favicon
 tests/
   test_app.py        end-to-end HTTP tests
 docs/

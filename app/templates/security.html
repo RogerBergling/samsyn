@@ -1,86 +1,42 @@
 {% extends "base.html" %}
-{% block title %}Security model · {{ app_name }}{% endblock %}
+{% block title %}Safety · {{ app_name }}{% endblock %}
 
 {% block content %}
 <section class="page-head">
-  <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span>Security model</p>
-  <h1>The proxy is the lock. The app still has a job.</h1>
+  <p class="eyebrow">Safety</p>
+  <h1>What this app confirms.</h1>
   <p class="hero-lede">
-    Samsyn delegates authentication to your existing proxy. It does not delegate
-    authorization, session security, CSRF protection, rate limits, audit, or privacy.
+    Samsyn confirms that both people joined the same verification and confirmed
+    each other's account. It does not verify the call itself.
   </p>
 </section>
 
-<section class="security-grid">
+<section class="promise-grid">
   <div class="panel">
-    <p class="eyebrow">Trust boundary</p>
-    <h2>Browser → proxy → app</h2>
-    <div class="flow">
-      <div class="flow-node"><span class="pill">1</span><strong>Browser</strong><small>No identity headers</small></div>
-      <span class="flow-arrow" aria-hidden="true">→</span>
-      <div class="flow-node accent"><span class="pill accent">2</span><strong>Secure proxy</strong><small>Authenticates, strips, injects</small></div>
-      <span class="flow-arrow" aria-hidden="true">→</span>
-      <div class="flow-node"><span class="pill ok">3</span><strong>Samsyn</strong><small>Session, authorization, CSRF</small></div>
-    </div>
-    <p class="muted">The proxy must be the only route to the app. If the app is directly reachable, anyone can forge <code>X-User-Id</code>.</p>
-  </div>
-
-  <div class="panel">
-    <p class="eyebrow">Current request</p>
-    <h2>What the app sees</h2>
-    <dl class="kv">
-      <div><dt>Subject</dt><dd class="mono">{{ user.subject }}</dd></div>
-      <div><dt>Name</dt><dd>{{ user.display_name }}</dd></div>
-      <div><dt>Assurance</dt><dd>{{ assurance_label(user.assurance, is_dev) }}</dd></div>
-      <div><dt>Source</dt><dd>{{ auth_ctx.source }}</dd></div>
-      <div><dt>Mode</dt><dd><span class="pill {{ 'warn' if is_dev else 'ok' }}">{{ auth_mode }}</span></dd></div>
-    </dl>
-    <button class="btn" type="button" id="security-test">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-terminal"></use></svg>
-      Send a forged X-User-Id
-    </button>
-    <pre class="code-result" id="security-result" hidden></pre>
-  </div>
-</section>
-
-<section class="security-grid">
-  <div class="panel">
-    <p class="eyebrow">Enforced by the app</p>
-    <h2>Not “no security”</h2>
+    <h2>It confirms</h2>
     <ul class="check-list">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>A server-side session bound to the proxy subject.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>CSRF tokens and Origin checks on every state change.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Resource-level authorization: only participants can see a session or receipt.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Single-use, hashed join tokens; per-session verification codes.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both participants must confirm; one-sided confirmation never verifies.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Rate limits, no-store responses, CSP, frame denial, HSTS in secure mode.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Personal numbers encrypted at rest; never logged; masked in receipts.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both signed-in accounts joined the same session.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both people saw the same name and code.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Both independently confirmed.</li>
     </ul>
   </div>
-
   <div class="panel">
-    <p class="eyebrow">Required from the proxy</p>
-    <h2>The boundary must be real</h2>
-    <ul class="check-list">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Authenticate every request, including API and static pages.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Strip any client-supplied <code>X-User-Id</code> or related identity headers.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Inject identity only after authentication.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Protect the proxy-to-app leg with mTLS or a shared secret.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Do not expose the app port directly to the internet.</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>Set <code>X-Auth-Assurance</code> honestly, or the app will label the identity as proxy-authenticated.</li>
+    <h2>It does not confirm</h2>
+    <ul class="cross-list">
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That the voice or video is authentic.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That a device or account is not compromised.</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-close"></use></svg>That everyone in a group call is present.</li>
     </ul>
   </div>
 </section>
 
-<section class="panel limits-panel">
-  <p class="eyebrow">Residual risk</p>
-  <h2>What this app cannot prove</h2>
-  <div class="limits-grid">
-    <div><strong>Voice and video</strong><p>A separate web app cannot prove the call media is unmodified. A relay or deepfake remains possible.</p></div>
-    <div><strong>Compromised devices</strong><p>Malware or a stolen session can act as a legitimate participant.</p></div>
-    <div><strong>Group lurkers</strong><p>Without call-platform integration, the app cannot see a listener who never joins the app.</p></div>
-    <div><strong>Weak identity</strong><p>A corporate directory account is not a legal identity. The assurance label must stay honest.</p></div>
+<div class="callout warn">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
+  <div>
+    <strong>If the name or code is wrong, stop.</strong>
+    Do not continue the call based on this verification. Contact the person or company through a channel you already trust.
   </div>
-  <a class="text-link" href="/">Back to verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
-</section>
+</div>
+
+<a class="text-link" href="/">Back to verification <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-arrow"></use></svg></a>
 {% endblock %}
