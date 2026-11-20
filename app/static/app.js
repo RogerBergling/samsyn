@@ -291,24 +291,49 @@
       </div>`;
   }
 
+  function directionPanel(view) {
+    const otherName = view.other ? view.other.name : t('other person');
+    const mine = Boolean(view.my_confirmed);
+    const theirs = Boolean(view.other_confirmed);
+    const both = mine && theirs;
+    const row = (done, doneText, pendingText) => `
+      <div class="direction-row ${done ? 'done' : 'pending'}">
+        <span class="direction-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-${done ? 'check' : 'clock'}"></use></svg>
+        </span>
+        <strong>${done ? doneText : pendingText}</strong>
+      </div>`;
+    return `
+      <div class="direction-panel">
+        <div class="direction-head">
+          <p class="eyebrow">${t("Verification status")}</p>
+          <span class="pill ${both ? 'ok' : 'warn'}">${both ? t("Both verified") : t("One more step")}</span>
+        </div>
+        <div class="direction-list">
+          ${row(
+            mine,
+            t("You verified {name}'s code.", { name: otherName }),
+            t("You still need to enter {name}'s code.", { name: otherName })
+          )}
+          ${row(
+            theirs,
+            t("{name} has verified your code.", { name: otherName }),
+            t("Waiting for {name} to verify your code.", { name: otherName })
+          )}
+        </div>
+        <p class="direction-summary">${both ? t("Both directions are complete.") : t("Both directions must be completed.")}</p>
+        <p class="direction-hint">${t("You verify them with their code. They verify you with yours.")}</p>
+      </div>`;
+  }
+
   function compare(view) {
     const otherName = view.other ? view.other.name : t('other person');
-    const otherStatus = view.other_confirmed
-      ? t("{name} has verified your code.", { name: otherName })
-      : t("Waiting for {name} to verify your code.", { name: otherName });
     let verifyBlock;
     if (view.my_confirmed) {
       verifyBlock = `
-        <div class="status-row">
-          <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>${t("You verified {name}'s code.", { name: otherName })}</span>
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${otherStatus}</span>
-        </div>
-        <p class="safety-note">${t("Keep this page open until the other person verifies your code.")}</p>`;
+        <p class="safety-note">${t("You verified {name}'s code. Waiting for them to verify yours.", { name: otherName })}</p>`;
     } else {
       verifyBlock = `
-        <div class="status-row">
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${otherStatus}</span>
-        </div>
         <label class="field">
           <span>${t("Enter {name}'s code", { name: otherName })}</span>
           <input class="input" id="other-code" inputmode="numeric" maxlength="7" placeholder="${t("6 digits")}" autocomplete="off" spellcheck="false">
@@ -329,6 +354,7 @@
             ${identityCard(view.me)}
             ${identityCard(view.other)}
           </div>
+          ${directionPanel(view)}
         </div>
         <div class="panel">
           <p class="eyebrow">${t("Your code")}</p>
@@ -368,6 +394,7 @@
         <p class="muted">${t("Both codes were verified. A receipt is available.")}</p>
         ${receiptButtons}
       </div>
+      ${directionPanel(view)}
       <div class="panel">
         <p class="eyebrow">${t("Participants")}</p>
         <div class="identity-grid">${identityCard(view.me)}${identityCard(view.other)}</div>
@@ -517,7 +544,7 @@
       });
       renderSession(data.session);
       if (decision === 'match') {
-        toast(data.session.state === 'verified' ? t("Both codes were verified.") : t("Your code was verified. Waiting for the other person."), 'ok');
+        toast(data.session.state === 'verified' ? t("Both codes were verified.") : t("You verified their code. Waiting for them to verify yours."), 'ok');
       } else {
         toast(t("The session was marked as a mismatch."), 'danger');
       }

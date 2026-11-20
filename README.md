@@ -20,6 +20,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 - 1:1 call, customer-service, and in-person flows.
 - Per-person 6-digit + 3-word verification code; each participant enters the other person’s code. Single-use 256-bit join token.
 - Both participants must verify the other person’s code; one-sided verification never completes.
+- A plain-language verification status panel shows both directions: “You verified their code” and “They verified your code.”
 - Full personal number display as a controlled “sensitive” view, encrypted at rest, never logged, never written to receipts.
 - Receipts with HMAC-SHA256 integrity, JSON download, and print/PDF.
 - A plain-language Safety page explaining what is and is not verified.
