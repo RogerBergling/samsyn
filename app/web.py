@@ -119,6 +119,27 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
         sys_version = ""
         timeout = 30  # slow-client guard
 
+        def handle_one_request(self) -> None:
+            # Browsers, mobile clients, and health probes routinely close a
+            # connection before sending a full request line/body. That is not
+            # an application error; suppress the default socketserver traceback.
+            try:
+                super().handle_one_request()
+            except (ConnectionError, TimeoutError):
+                self.close_connection = True
+
+        def handle(self) -> None:
+            try:
+                super().handle()
+            except (ConnectionError, TimeoutError):
+                pass
+
+        def finish(self) -> None:
+            try:
+                super().finish()
+            except (ConnectionError, TimeoutError):
+                pass
+
         def do_GET(self) -> None:  # noqa: N802
             self._handle("GET")
 
