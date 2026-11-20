@@ -46,7 +46,7 @@ The app should **not** be published directly. Bind it to localhost or a private 
 | `DATA_DIR` | `./data` | SQLite data directory. Use a persistent volume in containers. |
 | `DATABASE_PATH` | `$DATA_DIR/samsyn.db` | Override the database path. |
 | `HOST` / `PORT` | `0.0.0.0` / `8080` | Listen address and port. |
-| `VERIFICATION_TTL_SECONDS` | `300` | Default session lifetime (the UI offers 5/10/15 minutes). |
+| `VERIFICATION_TTL_SECONDS` | `600` | Default session lifetime (the UI defaults to 10 minutes and offers 5/10/15). |
 | `AUTH_SESSION_TTL_SECONDS` | `43200` | App session lifetime. |
 | `RATE_CREATE_PER_HOUR` | `20` | Session creation limit per user. |
 | `RATE_JOIN_PER_HOUR` | `60` | Join attempt limit. |
