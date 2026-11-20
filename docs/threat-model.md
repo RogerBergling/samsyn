@@ -55,7 +55,7 @@ The app must never silently upgrade that claim to:
 | Identity assertions (`x-userid`, names, personal number) | Spoofing them allows impersonation |
 | BFF session cookie | Hijacking it allows actions as the user |
 | Join tokens | Bearer tokens; leaking one may let an unintended person join |
-| Verification codes | If misused as a secret, leaking one may enable fraud |
+| Verification codes | If misused as a secret, leaking one may enable fraud; each participant receives only their own code |
 | Participant roster and confirmations | Tampering can produce a false “verified” result |
 | Receipts and audit logs | Evidence; tampering undermines trust and disputes |
 | Personal data (names, personal numbers) | GDPR/privacy harm; identity theft |
@@ -215,7 +215,7 @@ The app must never silently upgrade that claim to:
 1. Mallory calls Alice pretending to be Bob.
 2. Mallory calls Bob pretending to be Alice.
 3. Alice and Bob both open the app and join the same verification session (Mallory forwards the link or persuades them to join).
-4. They see each other’s real identities and the same code; both confirm.
+4. They see each other’s real identities and each verifies the other’s code.
 5. The app reports “verified” while Mallory is the voice in the middle.
 
 **Impact:** false assurance about the call channel.
@@ -477,7 +477,7 @@ These are accepted or explicitly out of scope for v1:
 | SR7 | State-changing requests MUST be CSRF-protected. |
 | SR8 | The app MUST enforce resource-level authorization on every session/receipt/event. |
 | SR9 | The join token MUST be 256-bit random, single-use, hashed at rest, and short-lived. |
-| SR10 | The verification code MUST be per-session, CSPRNG-generated, short-lived, and MUST NOT be used for join/auth. |
+| SR10 | Each participant’s verification code MUST be unique, CSPRNG-generated, short-lived, and MUST NOT be used for join/auth. The API MUST NOT expose the other participant’s code. |
 | SR11 | The server MUST require all required participants to confirm; one confirmation MUST NOT verify. |
 | SR12 | Confirmations MUST be bound to the roster version; roster changes MUST invalidate them. |
 | SR13 | Confirmation MUST be transactional and idempotent; exactly one receipt per verified session. |
@@ -566,7 +566,7 @@ Use this before approving the design or a release:
 - [ ] CSRF, XSS, CSP, clickjacking controls are in place.
 - [ ] Join token is single-use/hashed/TTL.
 - [ ] Verification code is not used for join/auth.
-- [ ] Both/all participants must confirm.
+- [ ] Both participants must verify the other person’s code.
 - [ ] Roster versioning invalidates stale confirmations.
 - [ ] Confirmation is transactional/idempotent.
 - [ ] Receipts are integrity-protected and access-controlled.

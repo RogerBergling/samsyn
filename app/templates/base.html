@@ -9,9 +9,9 @@
   <meta name="theme-color" id="theme-color" content="#070b14">
   <meta name="csrf-token" content="{{ csrf_token }}">
   <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
-  <script src="/static/theme.js"></script>
-  <link rel="stylesheet" href="/static/app.css">
-  <script src="/static/app.js" defer></script>
+  <script src="/static/theme.js?v={{ version }}"></script>
+  <link rel="stylesheet" href="/static/app.css?v={{ version }}">
+  <script src="/static/app.js?v={{ version }}" defer></script>
 </head>
 <body data-auth-mode="{{ auth_mode }}" data-is-dev="{{ '1' if is_dev else '0' }}">
   <a class="skip-link" href="#main">{{ t("Skip to content") }}</a>

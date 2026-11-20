@@ -47,7 +47,7 @@ This design depends on the answers below. Each is marked as an assumption, not a
 
 Project Verify is a web app that lets two or more authenticated people confirm that they are present together in a conversation. It is used alongside a call, not inside the call itself.
 
-The app creates a short-lived verification session. Participants join through a one-time link or QR code, see each other’s identity and assurance level, compare a per-session verification code, and independently confirm. The server records the result and produces a receipt.
+The app creates a short-lived verification session. Participants join through a one-time link, see each other’s identity and assurance level, and each reads their own 6-digit + 3-word code aloud. The other participant enters that code to verify them. The server records both directions and produces a receipt.
 
 The app does not implement login, passwords, or user onboarding. It relies on an existing reverse proxy / identity provider. It does, however, enforce authorization, session security, CSRF protection, input validation, rate limits, audit, and privacy. The proxy is the authentication boundary; the app is still responsible for everything after authentication.
 
@@ -69,7 +69,7 @@ That distinction is central to the product’s honesty and to its security.
 1. Let an authenticated user create a verification session for a specific conversation.
 2. Let the other participant(s) join through a one-time link or QR code.
 3. Show each participant the other participant’s identity and an honest assurance level.
-4. Generate a fresh, per-session verification code; no static shared secret.
+4. Generate a unique verification code per participant; no static shared secret.
 5. Require independent confirmation from every required participant.
 6. Bind confirmations to the participant roster and session state.
 7. Produce a verifiable receipt for a successful verification.
@@ -104,7 +104,7 @@ Some of these may become later phases. They are explicitly out of scope now to p
 | **Channel integrity** | Whether the call audio/video is authentic and unmodified. Not solved by this app. |
 | **Attestation** | A record that the verification happened, optionally signed. |
 | **Join token** | A high-entropy, single-use bearer token that lets a participant enter a session. It is not spoken aloud. |
-| **Verification code** | A short human-comparable code (digits + words) displayed to participants. It is not used to join or authenticate. |
+| **Verification code** | A short human-comparable code owned by one participant and read aloud to the other. The other participant enters it to verify the owner. It is not used to join or authenticate. |
 | **Roster** | The set of participants in a session, with their identities and assurance levels. |
 | **Roster version** | A monotonically increasing number that changes when the participant set changes. Confirmations are bound to it. |
 | **Assurance label** | The user-facing description of how identity was established. |
@@ -143,16 +143,15 @@ This app owns layers 2 and 4. It consumes layer 1. It does not claim layer 3.
 
 **Flow:**
 
-1. Alice creates a session. The app shows a join link, QR code, verification code, and expiry.
+1. Alice creates a session. The app shows a join link and expiry; Alice gets her own code, and Bob gets a different code when he joins.
 2. Alice shares the link in the call chat or shows the QR code.
 3. Bob opens the link. The proxy authenticates him. He sees Alice’s identity card and assurance label.
 4. Bob accepts. Alice sees “Bob Berg joined” with Bob’s identity and assurance label.
-5. Both see the same verification code and words.
-6. They compare the code over the call.
-7. Each presses “I see the same code” and “I confirm this is the person I am talking to.”
-8. The server verifies both confirmations in one transaction and creates a receipt.
+5. Each participant sees only their own code and words.
+6. Alice reads her code aloud; Bob enters it in his app. Bob reads his code aloud; Alice enters it in her app.
+7. The server verifies each entered code against the other participant’s code. When both directions are correct, it creates a receipt.
 
-**What is proven:** both authenticated accounts joined the same session, saw each other’s identity, and confirmed.
+**What is proven:** both authenticated accounts joined the same session, saw each other’s identity, and each verified the other person’s code.
 
 **Limitations:** the app does not prove the voice is authentic. If Mallory relays the call between Alice and Bob, both may still see each other in the app. See the threat model.
 
@@ -167,7 +166,7 @@ This app owns layers 2 and 4. It consumes layer 1. It does not claim layer 3.
 3. The agent sends the link by SMS, email, or the call platform’s chat, or reads a short reference while the customer opens the app.
 4. The customer opens the app, authenticates, and sees: “You are verifying with [Company] — agent [Name].”
 5. The customer confirms. The agent sees the customer’s identity and assurance label.
-6. Both compare the code and confirm.
+6. The customer reads their own code; the agent enters it. The agent reads theirs; the customer enters it.
 7. A receipt is stored for the company’s audit.
 
 **Anti-phishing rule:** the customer must never read a verification code back to an inbound caller. The company initiates; the customer enters or confirms in the app. The app copy must say this explicitly.
@@ -182,8 +181,8 @@ This app owns layers 2 and 4. It consumes layer 1. It does not claim layer 3.
 
 1. Alice creates a session and shows a QR code.
 2. Bob scans it with his phone; the proxy authenticates him.
-3. Both see each other’s identity and the same code.
-4. Both confirm.
+3. Both see each other’s identity and each gets their own code.
+4. Each reads their own code aloud and enters the other person’s code.
 
 **What is proven:** the accounts belong to the people present, assuming devices are not shared or compromised. The code comparison is less important than in a remote call, but still useful.
 
@@ -323,7 +322,7 @@ Alice (browser)          BFF / app                   Bob (browser)
 1. **Create**
    - Alice opens the app. The proxy has already authenticated her.
    - She chooses “Verify someone in this call”, optionally adds context, and chooses the session duration.
-   - The server creates a session with a 256-bit join token (stored as a hash), a 6-digit + 3-word verification code, and a 2–5 minute expiry.
+   - The server creates a session with a 256-bit join token (stored as a hash) and a 2–5 minute expiry. Each participant receives a unique 6-digit + 3-word code when they create/join.
    - The response contains the join URL, QR payload, code, and expiry. The raw join token is never stored.
 
 2. **Invite**
@@ -340,14 +339,14 @@ Alice (browser)          BFF / app                   Bob (browser)
    - If this is not the person she expected, she cancels the session. This limits the damage of a leaked join link.
 
 5. **Compare**
-   - Both see the same code: e.g., `482 913` and `katt – berg – cykel`.
-   - The code is bound to the session ID, both participant IDs, and the roster version.
+   - Each participant gets a different code: e.g., Alice sees `482 913` and Bob sees `731 044`.
+   - Each code is bound to the participant’s identity and the session ID.
    - They compare it over the call. On video, they can show the screen; on voice, they read the digits and words.
 
 6. **Confirm**
-   - Each participant presses two separate actions: “I see the same code” and “I confirm this is the person I am talking to.”
+   - Each participant reads their own code aloud and enters the code they hear from the other person.
    - The server identifies the participant from the BFF session, not from the request body.
-   - The first confirmation is stored with the current roster version. The second confirmation triggers a transaction that checks both confirmations and marks the session verified.
+   - A successful entry is stored for that participant and the current roster version. When both directions are correct, the transaction marks the session verified.
 
 7. **Result**
    - **Verified:** both see a success screen and a receipt.
@@ -367,7 +366,7 @@ Alice (browser)          BFF / app                   Bob (browser)
 4. The customer opens the link and authenticates. If the customer is external, this requires a customer IdP or eID; see section 11.
 5. The customer sees: “You are verifying with [Company] — agent [Name].” The company identity must be visually clear.
 6. The customer confirms. The agent sees the customer’s identity and assurance label.
-7. Both compare the code and confirm.
+7. Each reads their own code aloud and enters the other person’s code.
 8. The company receives an audit receipt.
 
 **Anti-fraud copy (must appear in the customer flow):**
@@ -381,8 +380,8 @@ Alice (browser)          BFF / app                   Bob (browser)
 
 1. Alice creates a session and shows a QR code on her phone.
 2. Bob scans the QR code with his phone. The proxy authenticates him.
-3. Both see each other’s identity and the same code.
-4. Both confirm.
+3. Both see each other’s identity and each gets their own code.
+4. Each reads their own code aloud and enters the other person’s code.
 5. The receipt is available to both.
 
 **One-device handover:** not recommended for v1. If required, it must force a fresh authentication for the second person and clear the first person’s session; otherwise the first person’s identity can leak into the second confirmation.
@@ -429,7 +428,7 @@ Alice (browser)          BFF / app                   Bob (browser)
 | **Create** | Configure session | Context note; duration; require eID signature (later); expected participants for group |
 | **Invite** | Share the session | Large code + words; copy link; QR; “Share in the call chat”; expiry countdown; safety copy |
 | **Join** | Consent and context | Initiator identity card; assurance label; what is shared; “Only continue if expected”; Continue / Cancel |
-| **Compare** | The ceremony | Two identity cards; same code + words; countdown; two confirmation controls; “Something is wrong” |
+| **Verify** | The ceremony | Two identity cards; “Your code” + words; an input for the other person’s code; countdown; “Something is wrong” |
 | **Waiting** | Other participant not ready | Participant status; resend link; cancel; expiry |
 | **Verified** | Success | Green check; receipt; “Done”; “Download receipt” |
 | **Mismatch** | Failure | Red warning; “Do not continue”; report; start over |
@@ -440,13 +439,13 @@ Alice (browser)          BFF / app                   Bob (browser)
 ### 7.2 Visual and interaction principles
 
 - Calm, trustworthy, not “cyber”.
-- Green only after **both** participants confirm. Never show a green check after one confirmation.
+- Green only after **both** participants have verified the other person’s code. Never show a green check after one direction.
 - Status uses icon + text + colour, not colour alone.
 - The code is large, grouped, and readable at a distance: `482 913`, with words underneath.
 - Show the expiry countdown prominently.
 - Show “Waiting for [name]” and “Confirmed” states clearly.
 - Do not auto-confirm on page load. Confirmation must be a deliberate action.
-- Do not use a single “OK” button for both “I see the code” and “I confirm the person”; separate the two decisions.
+- Keep the two directions distinct: “Your code” to read aloud, and an input for the other person’s code.
 - Provide a “This is not the person” / “Something is wrong” action at every step.
 - Do not show the full personal number. Show name and masked number, e.g. `1990••••-••••`.
 - Show the assurance label next to the name. Do not use a generic “Verified” badge without saying what was verified.
@@ -600,7 +599,7 @@ The following is a logical schema. Column types and indexes are indicative.
 | `context_note` | text null | Optional user-provided context; treat as sensitive. |
 | `require_eid_sign` | boolean | Later phase. |
 | `join_token_hash` | bytea not null | SHA-256 of the raw token. Raw token never stored. |
-| `code_ciphertext` | bytea null | Encrypted verification code; short TTL. Alternative: store only a hash and keep the code in Redis. |
+| `participant.code` / `participant.words` | text | Each participant’s own code and words, generated at create/join. The API returns only the current participant’s code. |
 | `code_words` | text | Localized words. |
 | `roster_version` | int not null default 0 | Incremented on participant set changes. |
 | `expected_participants` | int null | For group sessions. |
@@ -757,7 +756,7 @@ COMMIT;
 - The confirmation must include the `roster_version` the user saw. If it is stale, reject with `409 Conflict` and show the updated roster.
 - Use an idempotency key so retries do not create duplicate receipts.
 - Use a unique constraint on `receipts.session_id` to prevent double receipts.
-- Do not send the verification code in the confirmation request. The server does not need it; the confirmation is about what the human saw.
+- The confirmation request contains the code the participant heard from the other person. The server compares it with the other participant’s code; it never returns the other participant’s code to the client.
 
 ### 10.4 Expiry
 
@@ -935,9 +934,10 @@ The detailed threat analysis is in [threat-model.md](threat-model.md). This sect
 ### 12.4 Verification-specific controls
 
 - [ ] Join token: 256-bit random, single-use, hashed at rest, short TTL.
-- [ ] Verification code: per-session, CSPRNG, 6 digits + 3 words, short TTL, one-time, bound to session + participants + roster version.
+- [ ] Verification code: unique per participant, CSPRNG, 6 digits + 3 words, short TTL, one-time, bound to participant + session + roster version.
+- [ ] A participant never receives the other participant’s code from the API.
 - [ ] The code is **not** used to join or authenticate.
-- [ ] Both (or all required) participants must confirm; one-sided confirmation never verifies.
+- [ ] Both participants must successfully enter the other person’s code; one-sided verification never verifies.
 - [ ] Confirmations are bound to the roster version; roster changes invalidate them.
 - [ ] The server identifies the participant from the BFF session.
 - [ ] Receipt creation is unique and transactional.
@@ -1106,7 +1106,7 @@ Do not use “BankID” or “Freja” in the product name. Do not imply affilia
   - two browser windows (Alice/Bob),
   - create/join/compare/confirm/receipt,
   - mismatch, expiry, and refresh states.
-- Test the ceremony with 5–10 real users. Measure whether they actually compare the code.
+- Test the ceremony with 5–10 real users. Measure whether they actually read their own code and enter the other person’s code.
 
 **Deliverables:** prototype, UX copy, test plan, updated design.
 
@@ -1114,7 +1114,7 @@ Do not use “BankID” or “Freja” in the product name. Do not imply affilia
 
 - 1:1 remote + in-person.
 - Existing proxy integration; BFF session; header validation.
-- Session state machine; join token; verification code; both-party confirmation.
+- Session state machine; join token; per-person verification codes; mutual code verification.
 - Receipts and audit events.
 - Rate limits, CSRF, CSP, session security.
 - Deployment in the EU; monitoring; backups.
@@ -1151,8 +1151,8 @@ Do not use “BankID” or “Freja” in the product name. Do not imply affilia
 
 - [ ] Alice can create a session and share a join link/QR.
 - [ ] Bob can join, authenticate, and see Alice’s identity and assurance.
-- [ ] Both see the same verification code and words.
-- [ ] Both must confirm before the session becomes verified.
+- [ ] Each participant sees only their own code and words.
+- [ ] Each participant must enter the other participant’s code before the session becomes verified.
 - [ ] One-sided confirmation never produces a receipt.
 - [ ] A mismatch produces no receipt and warns both parties.
 - [ ] An expired session cannot be confirmed.

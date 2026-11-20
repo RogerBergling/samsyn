@@ -4,7 +4,7 @@
 **Working name:** Samsyn. It is **not trademark-cleared**; see [docs/naming.md](docs/naming.md).  
 **Design:** dark, clear interface inspired by [apps.bergling.net](https://apps.bergling.net), simplified for end users.
 
-Samsyn is a web app for **mutual verification between people in a call**. Two authenticated people join a short session, see each other’s identity and assurance level, compare a per-session code, and independently confirm. The result is an integrity-protected receipt.
+Samsyn is a web app for **mutual verification between people in a call**. Two authenticated people join a short session, see each other’s identity and assurance level, and each reads their **own** code aloud for the other to enter and verify. The result is an integrity-protected receipt.
 
 It sits behind an existing secure proxy. The app has no password login of its own, but it still enforces authorization, session security, CSRF, rate limits, audit, and privacy.
 
@@ -18,8 +18,8 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 - Proxy-header authentication (`X-User-Id`, `X-Name`, `X-Last-Name`, `X-Person-Id`).
 - A development mode with mock identities for local testing.
 - 1:1 call, customer-service, and in-person flows.
-- Per-session 6-digit + 3-word verification code; single-use 256-bit join token.
-- Both participants must confirm; one-sided confirmation never verifies.
+- Per-person 6-digit + 3-word verification code; each participant enters the other person’s code. Single-use 256-bit join token.
+- Both participants must verify the other person’s code; one-sided verification never completes.
 - Full personal number display as a controlled “sensitive” view, encrypted at rest, never logged, never written to receipts.
 - Receipts with HMAC-SHA256 integrity, JSON download, and print/PDF.
 - A plain-language Safety page explaining what is and is not verified.
@@ -105,6 +105,10 @@ PROXY_LOGOUT_URL=https://sso.example.se/logout
 DATA_DIR=/data
 ```
 
+`BASE_URL` is the **public address used in invitation links**. It is required;
+the app will not fall back to an internal container or proxy host. For example,
+if users open `https://verify.example.se`, set exactly that.
+
 **If you see “Request origin is not allowed” when starting a verification:**
 open the app on the same URL you configured in `BASE_URL`, or add the browser’s
 origin to `ALLOWED_ORIGINS` (comma-separated). The request’s own host is accepted
@@ -139,6 +143,7 @@ docker run --rm -p 8080:8080 \
   -e AUTH_MODE=dev \
   -e SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" \
   -e COOKIE_SECURE=0 \
+  -e BASE_URL=http://localhost:8080 \
   -e DATA_DIR=/data \
   -v samsyn-data:/data \
   samsyn:dev
@@ -191,7 +196,9 @@ The suite covers:
 - CSRF enforcement and origin acceptance/rejection,
 - Swedish/English language detection and SV/EN switching,
 - forged `X-User-Id` ignored in dev,
-- full create/join/confirm/receipt flow,
+- full create/join/verify-code/receipt flow with unique per-person codes,
+- wrong or missing counterpart code rejected,
+- configured public `BASE_URL` used for invitation links,
 - single-use join tokens and IDOR,
 - mismatch with no receipt,
 - masked-number reveal,

@@ -42,6 +42,7 @@ def main() -> None:
         f"(auth_mode={config.auth_mode})",
         flush=True,
     )
+    print(f"Invitation base URL: {config.base_url}", flush=True)
     try:
         server.serve_forever()
     finally:

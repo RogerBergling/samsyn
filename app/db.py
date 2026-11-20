@@ -72,6 +72,8 @@ CREATE TABLE IF NOT EXISTS participants (
     org TEXT,
     pn_encrypted TEXT,
     pn_masked TEXT,
+    code TEXT,
+    words TEXT,
     joined_at TEXT NOT NULL,
     confirmed_at TEXT,
     decision TEXT,
@@ -116,6 +118,14 @@ def init_db(config: Config) -> None:
     try:
         conn.execute("PRAGMA journal_mode = WAL")
         conn.executescript(SCHEMA)
+        # Lightweight migration for databases created before per-participant codes.
+        participant_columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(participants)")
+        }
+        if "code" not in participant_columns:
+            conn.execute("ALTER TABLE participants ADD COLUMN code TEXT")
+        if "words" not in participant_columns:
+            conn.execute("ALTER TABLE participants ADD COLUMN words TEXT")
         conn.commit()
     finally:
         conn.close()

@@ -6,7 +6,7 @@
   <p class="eyebrow">{{ t("How it works") }}</p>
   <h1>{{ t("Two people. One short verification.") }}</h1>
   <p class="hero-lede">
-    {{ t("You share an invitation link, both join, read the same code aloud, and both confirm. It takes about a minute.") }}
+    {{ t("You share an invitation link, both join, and each of you reads your own code aloud for the other to verify. It takes about a minute.") }}
   </p>
 </section>
 
@@ -19,38 +19,38 @@
   <article class="step-card">
     <span class="step-number">02</span>
     <h3>{{ t("Both join") }}</h3>
-    <p>{{ t("The other person opens the link and signs in. You will both see each other's name and the same code.") }}</p>
+    <p>{{ t("The other person opens the link and signs in. You each get your own code.") }}</p>
   </article>
   <article class="step-card">
     <span class="step-number">03</span>
-    <h3>{{ t("Read the code aloud") }}</h3>
-    <p>{{ t("Read the 6 digits and 3 words on the call. Do not text or email the code; it must be compared live. Check that the name is the person you expected.") }}</p>
+    <h3>{{ t("Read your code aloud") }}</h3>
+    <p>{{ t("Read your own 6 digits and 3 words on the call. The other person enters your code. Then they read theirs and you enter it. Do not text or email the codes.") }}</p>
   </article>
   <article class="step-card">
     <span class="step-number">04</span>
-    <h3>{{ t("Both confirm") }}</h3>
-    <p>{{ t("Each person presses Confirm. Only then is the verification complete and a receipt created.") }}</p>
+    <h3>{{ t("Both verify") }}</h3>
+    <p>{{ t("When each person has verified the other's code, the verification is complete and a receipt is created.") }}</p>
   </article>
 </section>
 
 <section class="promise-grid">
   <div class="panel">
     <p class="eyebrow">{{ t("What to share") }}</p>
-    <h2>{{ t("Share the link, not the code.") }}</h2>
+    <h2>{{ t("Share the link, not the codes.") }}</h2>
     <ul class="check-list">
       <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Send the invitation link in the call chat, SMS, or email.") }}</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("The link works once. Do not post it publicly.") }}</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("The code is read aloud only after both of you have joined.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Each person has a different code. Do not send the codes by message.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Read your code aloud only after both of you have joined.") }}</li>
     </ul>
   </div>
 
   <div class="panel">
-    <p class="eyebrow">{{ t("Who can hear the code") }}</p>
-    <h2>{{ t("Anyone on the call can hear it.") }}</h2>
+    <p class="eyebrow">{{ t("Who can hear the codes") }}</p>
+    <h2>{{ t("Anyone on the call can hear them.") }}</h2>
     <ul class="check-list">
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("The code is not a password. It is a short-lived check that you are in the same session.") }}</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Do not read it to someone who called you first, and do not post it.") }}</li>
-      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("In a group call, other people can hear it. The app cannot detect a silent listener. For sensitive calls, use a 1:1 call and check the name.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("The codes are not passwords. They are short-lived checks that you are in the same session.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("Do not read them to someone who called you first, and do not post them.") }}</li>
+      <li><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>{{ t("In a group call, other people can hear the codes. The app cannot detect a silent listener. For sensitive calls, use a 1:1 call and check the name.") }}</li>
     </ul>
   </div>
 </section>
@@ -65,7 +65,8 @@
         <li>{{ t("Start a verification.") }}</li>
         <li>{{ t("Copy the invitation link and send it to the other person.") }}</li>
         <li>{{ t("Wait for them to join.") }}</li>
-        <li>{{ t("Read the code aloud and press Confirm.") }}</li>
+        <li>{{ t("Read your own code aloud.") }}</li>
+        <li>{{ t("Enter the code the other person reads to you.") }}</li>
       </ol>
     </div>
     <div>
@@ -73,8 +74,8 @@
       <ol class="help-list">
         <li>{{ t("Open the invitation link.") }}</li>
         <li>{{ t("Check the name of the person who invited you.") }}</li>
-        <li>{{ t("Compare the code with them on the call.") }}</li>
-        <li>{{ t("Press Confirm only if the name and code match.") }}</li>
+        <li>{{ t("Read your own code aloud.") }}</li>
+        <li>{{ t("Enter the code the other person reads to you.") }}</li>
       </ol>
     </div>
   </div>
@@ -83,7 +84,7 @@
 <div class="callout warn">
   <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-warning"></use></svg>
   <div>
-    <strong>{{ t("If the name or code is wrong, stop.") }}</strong>
+    <strong>{{ t("If a name or code is wrong, stop.") }}</strong>
     {{ t("Press “Something is wrong” and do not continue the call based on this verification. Contact the person or company through a channel you already trust.") }}
   </div>
 </div>

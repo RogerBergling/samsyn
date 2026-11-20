@@ -124,6 +124,18 @@ def create_verification(
         conn.close()
 
 
+def _unique_participant_code(conn: sqlite3.Connection, verification_id: str) -> str:
+    for _ in range(25):
+        code = security.new_code()
+        existing = conn.execute(
+            "SELECT 1 FROM participants WHERE verification_id = ? AND code = ?",
+            (verification_id, code),
+        ).fetchone()
+        if not existing:
+            return code
+    raise VerificationError(500, "code_error", "Could not allocate a unique code")
+
+
 def _insert_participant(
     conn: sqlite3.Connection,
     config: Config,
@@ -138,8 +150,9 @@ def _insert_participant(
         """
         INSERT INTO participants
             (id, verification_id, user_id, role, subject, first_name, last_name,
-             display_name, assurance, org, pn_encrypted, pn_masked, joined_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             display_name, assurance, org, pn_encrypted, pn_masked,
+             code, words, joined_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             security.new_id(),
@@ -156,6 +169,8 @@ def _insert_participant(
                 config.secret_key, config.pn_encryption_key, identity.person_id
             ),
             security.mask_pn(identity.person_id) if identity.person_id else None,
+            _unique_participant_code(conn, verification_id),
+            json.dumps(security.new_words(), ensure_ascii=False),
             joined_at,
         ),
     )
@@ -285,7 +300,7 @@ def _create_receipt(
             }
             for p in participants
         ],
-        "method": "Both participants confirmed the same code and participant identities in the same session.",
+        "method": "Each participant read their own code aloud and the other participant verified it in the same session.",
         "disclaimer": "This receipt confirms account presence in a verification session. It does not prove the voice or video channel is authentic.",
     }
     receipt_id = security.new_id()
@@ -336,6 +351,27 @@ def get_view(
         conn.close()
 
 
+def _ensure_participant_codes(
+    conn: sqlite3.Connection, participants: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Backfill per-person codes for sessions created before the schema change."""
+    missing = [p for p in participants if not p["code"]]
+    if not missing:
+        return participants
+    for participant in missing:
+        conn.execute(
+            "UPDATE participants SET code = ?, words = ? WHERE id = ?",
+            (
+                _unique_participant_code(conn, participant["verification_id"]),
+                json.dumps(security.new_words(), ensure_ascii=False),
+                participant["id"],
+            ),
+        )
+    conn.commit()
+    verification_id = participants[0]["verification_id"]
+    return _participants(conn, verification_id)
+
+
 def _build_view(
     conn: sqlite3.Connection,
     config: Config,
@@ -343,7 +379,9 @@ def _build_view(
     user_id: str,
     base_url: str,
 ) -> dict[str, Any]:
-    participants = _participants(conn, verification["id"])
+    participants = _ensure_participant_codes(
+        conn, _participants(conn, verification["id"])
+    )
     me = next((p for p in participants if p["user_id"] == user_id), None)
     if not me:
         raise VerificationError(403, "forbidden", "You are not a participant in this verification")
@@ -393,6 +431,8 @@ def _build_view(
 
     my_view = next(p for p in participant_views if p["is_me"])
     other_view = next((p for p in participant_views if not p["is_me"]), None)
+    my_code = me["code"] or ""
+    my_words = json.loads(me["words"]) if me["words"] else []
 
     join_url_value = None
     if (
@@ -431,8 +471,8 @@ def _build_view(
         "state_label": security.state_label(verification["state"]),
         "context": verification["context"],
         "pn_mode": verification["pn_mode"],
-        "code": verification["code"],
-        "words": json.loads(verification["words"]),
+        "my_code": my_code,
+        "my_words": my_words,
         "roster_version": verification["roster_version"],
         "created_at": verification["created_at"],
         "expires_at": verification["expires_at"],
@@ -444,7 +484,7 @@ def _build_view(
         "other": other_view,
         "my_confirmed": my_view["confirmed"],
         "other_confirmed": bool(other_view and other_view["confirmed"]),
-        "can_confirm": (
+        "can_verify": (
             verification["state"] in {"ready", "confirming"} and not my_view["confirmed"]
         ),
         "can_cancel": verification["state"] not in TERMINAL,
@@ -591,6 +631,7 @@ def confirm(
     *,
     decision: str,
     roster_version: int,
+    code: str = "",
     base_url: str,
     ip_hash: str | None = None,
     ua_hash: str | None = None,
@@ -626,6 +667,30 @@ def confirm(
             raise VerificationError(403, "forbidden", "You are not a participant")
         if participant["decision"] and participant["decision"] != decision:
             raise VerificationError(409, "already_decided", "You already made a decision")
+
+        if decision == "match":
+            other_participant = conn.execute(
+                """
+                SELECT * FROM participants
+                 WHERE verification_id = ? AND user_id != ?
+                 LIMIT 1
+                """,
+                (verification_id, auth_ctx.user["id"]),
+            ).fetchone()
+            if not other_participant:
+                raise VerificationError(
+                    409, "not_ready", "The other participant has not joined yet"
+                )
+            expected = security.normalize_code(other_participant["code"])
+            supplied = security.normalize_code(code)
+            if not expected or not supplied or not security.constant_time_equal(
+                supplied, expected
+            ):
+                raise VerificationError(
+                    422,
+                    "invalid_code",
+                    "The code does not match the other participant's code",
+                )
 
         conn.execute(
             """

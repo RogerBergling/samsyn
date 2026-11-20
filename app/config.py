@@ -4,6 +4,7 @@ import os
 import secrets
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlparse
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -95,11 +96,24 @@ class Config:
             for origin in os.getenv("ALLOWED_ORIGINS", "").split(",")
             if origin.strip()
         )
-        if auth_mode == "proxy" and not base_url:
-            warnings.append(
-                "BASE_URL is not set. Join links will be derived from the Host header; "
-                "set BASE_URL in production behind a proxy."
+        if not base_url:
+            raise SystemExit(
+                "BASE_URL is required. It is the public address used in invitation "
+                "links, for example https://verify.example.se"
             )
+        if base_url:
+            parsed_base = urlparse(base_url)
+            if parsed_base.scheme not in {"http", "https"} or not parsed_base.netloc:
+                raise SystemExit("BASE_URL must be an absolute http:// or https:// URL")
+            if auth_mode == "proxy" and parsed_base.hostname in {
+                "localhost",
+                "127.0.0.1",
+                "::1",
+            }:
+                warnings.append(
+                    "BASE_URL points to localhost. Invitation links will only work on "
+                    "this machine; set it to the public address in production."
+                )
 
         cookie_secure = _env_bool("COOKIE_SECURE", auth_mode == "proxy")
         cookie_name = os.getenv("COOKIE_NAME", "").strip() or (

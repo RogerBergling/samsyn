@@ -6,7 +6,6 @@
   const TERMINAL = new Set(['verified', 'mismatch', 'expired', 'cancelled']);
   const state = {
     session: null,
-    compare: { code: false, person: false },
     hidePn: false,
     pollTimer: null,
     countdownTimer: null,
@@ -179,7 +178,7 @@
     return `
       <div class="progress" aria-label="Verification progress">
         <span class="step ${step1}"><span class="step-dot">1</span>${t("Share")}</span>
-        <span class="step ${step2}"><span class="step-dot">2</span>${t("Compare")}</span>
+        <span class="step ${step2}"><span class="step-dot">2</span>${t("Verify")}</span>
         <span class="step ${step3}"><span class="step-dot">3</span>${t("Done")}</span>
       </div>`;
   }
@@ -227,11 +226,11 @@
   }
 
   function codePanel(view) {
-    const words = (view.words || []).map((word) => `<span>${esc(word)}</span>`).join('');
+    const words = (view.my_words || []).map((word) => `<span>${esc(word)}</span>`).join('');
     return `
       <div class="code-panel">
-        <p class="eyebrow">${t("Verification code")}</p>
-        <div class="code-digits">${esc(view.code)}</div>
+        <p class="eyebrow">${t("Your code")}</p>
+        <div class="code-digits">${esc(view.my_code || "—")}</div>
         <div class="code-words">${words}</div>
         <div class="countdown">
           <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg>
@@ -248,7 +247,7 @@
   function waiting(view) {
     const joinBlock = view.join_url
       ? `<div class="link-row">
-           <input class="input" id="join-link" readonly value="${esc(view.join_url)}" aria-label="Invitation link">
+           <input class="input" id="join-link" readonly value="${esc(view.join_url)}" aria-label="${t("Invitation link")}">
            <button class="btn" type="button" data-action="copy-link"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-copy"></use></svg>${t("Copy")}</button>
          </div>
          <p class="safety-note">${t("Share this link in the call chat. It works once and expires.")}</p>`
@@ -263,19 +262,25 @@
       </div>
       <div class="panel session-single">
         <div class="panel-head">
-          <div><p class="eyebrow">${t("Your code")}</p><h2>${t("Send this link.")}</h2></div>
+          <div><p class="eyebrow">${t("Invite")}</p><h2>${t("Send this link.")}</h2></div>
           <span class="pill warn">${t("Waiting")}</span>
         </div>
-        ${codePanel(view)}
+        <div class="code-placeholder">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"></use></svg>
+          <div>
+            <strong>${t("Your code appears when the other person joins.")}</strong>
+            <span>${t("You will each get your own code to read aloud.")}</span>
+          </div>
+        </div>
         ${joinBlock}
         <div class="session-help">
           <strong>${t("What happens next")}</strong>
           <ol>
             <li>${t("They open the link and join.")}</li>
-            <li>${t("You both see the same name and code.")}</li>
-            <li>${t("Read the code aloud. Both of you confirm.")}</li>
+            <li>${t("You each get your own code.")}</li>
+            <li>${t("Each of you reads your code aloud; the other enters it.")}</li>
           </ol>
-          <p>${t("Share the link, not the code. Anyone on the call can hear the code; it is not a password and expires.")}</p>
+          <p>${t("Share the link, not the codes. Anyone on the call can hear a code when it is read aloud; the codes are not passwords and expire.")}</p>
           <a href="/how-it-works">${t("How it works")}</a>
         </div>
         <div class="confirm-actions">
@@ -287,24 +292,29 @@
   }
 
   function compare(view) {
-    const otherName = view.other ? view.other.name : 'the other person';
-    let confirmBlock;
+    const otherName = view.other ? view.other.name : t('other person');
+    const otherStatus = view.other_confirmed
+      ? t("{name} has verified your code.", { name: otherName })
+      : t("Waiting for {name} to verify your code.", { name: otherName });
+    let verifyBlock;
     if (view.my_confirmed) {
-      confirmBlock = `
+      verifyBlock = `
         <div class="status-row">
-          <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>${t("You confirmed")}</span>
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? t("And {name} confirmed", { name: otherName }) : t("Waiting for {name}", { name: otherName })}</span>
+          <span class="status-chip ok"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg>${t("You verified {name}'s code.", { name: otherName })}</span>
+          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${otherStatus}</span>
         </div>
-        <p class="safety-note">${t("Keep this page open until the result appears.")}</p>`;
+        <p class="safety-note">${t("Keep this page open until the other person verifies your code.")}</p>`;
     } else {
-      confirmBlock = `
+      verifyBlock = `
         <div class="status-row">
-          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${view.other_confirmed ? t("{name} confirmed", { name: otherName }) : t("{name} has not confirmed yet", { name: otherName })}</span>
+          <span class="status-chip ${view.other_confirmed ? 'ok' : 'pending'}">${otherStatus}</span>
         </div>
-        <label class="check-row"><input type="checkbox" id="confirm-code" ${state.compare.code ? 'checked' : ''}> ${t("I see the same code: {code}", { code: view.code })}</label>
-        <label class="check-row"><input type="checkbox" id="confirm-person" ${state.compare.person ? 'checked' : ''}> ${t("I confirm this is the person I am talking to.")}</label>
+        <label class="field">
+          <span>${t("Enter {name}'s code", { name: otherName })}</span>
+          <input class="input" id="other-code" inputmode="numeric" maxlength="7" placeholder="${t("6 digits")}" autocomplete="off" spellcheck="false">
+        </label>
         <div class="confirm-actions">
-          <button class="btn btn-primary btn-lg" type="button" id="confirm-button" data-action="confirm" ${state.compare.code && state.compare.person ? '' : 'disabled'}>${t("Confirm")} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
+          <button class="btn btn-primary btn-lg" type="button" data-action="verify-code">${t("Verify their code")} <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></button>
           <button class="btn btn-danger" type="button" data-action="mismatch">${t("Something is wrong")}</button>
         </div>`;
     }
@@ -321,21 +331,20 @@
           </div>
         </div>
         <div class="panel">
-          <p class="eyebrow">${t("Compare")}</p>
-          <h2>${t("Read the code aloud.")}</h2>
+          <p class="eyebrow">${t("Your code")}</p>
+          <h2>${t("Read your code aloud.")}</h2>
           ${codePanel(view)}
           <div class="session-help">
             <strong>${t("What to do")}</strong>
             <ol>
-              <li>${t("Read the code aloud.")}</li>
-              <li>${t("Check that the name is the person you expected.")}</li>
-              <li>${t("Both press Confirm.")}</li>
+              <li>${t("Read your own code aloud to {name}.", { name: otherName })}</li>
+              <li>${t("Enter the code {name} reads to you.", { name: otherName })}</li>
+              <li>${t("When both codes are verified, you are done.")}</li>
             </ol>
-            <p>${t("Anyone on the call can hear the code. It is not a password and expires. Do not text or email it.")}</p>
+            <p>${t("Anyone on the call can hear the codes. They are not passwords and expire. Do not text or email them.")}</p>
             <a href="/how-it-works">${t("How it works")}</a>
           </div>
-          <p class="safety-note">${t("Only confirm if the name and code match.")}</p>
-          <div class="confirm-panel">${confirmBlock}</div>
+          <div class="confirm-panel">${verifyBlock}</div>
           <div class="confirm-actions">
             <button class="btn btn-ghost btn-sm" type="button" data-action="cancel">${t("Cancel")}</button>
           </div>
@@ -356,7 +365,7 @@
       <div class="panel verified-card">
         <div class="verified-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"></use></svg></div>
         <h1>${t("Verified.")}</h1>
-        <p class="muted">${t("Both people confirmed the same session. A receipt is available.")}</p>
+        <p class="muted">${t("Both codes were verified. A receipt is available.")}</p>
         ${receiptButtons}
       </div>
       <div class="panel">
@@ -396,7 +405,7 @@
 
   function titleFor(view) {
     if (view.state === 'waiting') return t("Share this verification.");
-    if (view.state === 'ready' || view.state === 'confirming') return t("Compare and confirm.");
+    if (view.state === 'ready' || view.state === 'confirming') return t("Verify each other's codes.");
     if (view.state === 'verified') return t("Verified.");
     if (view.state === 'mismatch') return t("Do not continue.");
     if (view.state === 'expired') return t("Expired.");
@@ -407,9 +416,6 @@
   function renderSession(view) {
     const root = $('#session-root');
     if (!root || !view) return;
-    if (!state.session || state.session.id !== view.id) {
-      state.compare = { code: false, person: false };
-    }
     state.session = view;
     state.lastHash = JSON.stringify(view);
     const body = view.state === 'waiting'
@@ -436,13 +442,6 @@
     root.setAttribute('aria-busy', 'false');
     if (TERMINAL.has(view.state)) stopPoll(); else startPoll(view.id);
     startCountdown();
-    updateConfirmButton();
-  }
-
-  function updateConfirmButton() {
-    const button = $('#confirm-button');
-    if (!button) return;
-    button.disabled = !(state.compare.code && state.compare.person);
   }
 
   function startCountdown() {
@@ -504,18 +503,37 @@
     }
   }
 
-  async function confirmSession(decision) {
+  async function confirmSession(decision, code = '') {
     if (!state.session) return;
+    const payload = {
+      decision,
+      roster_version: state.session.roster_version,
+    };
+    if (decision === 'match') payload.code = code;
     try {
       const data = await api(`/api/sessions/${state.session.id}/confirm`, {
         method: 'POST',
-        body: JSON.stringify({ decision, roster_version: state.session.roster_version }),
+        body: JSON.stringify(payload),
       });
       renderSession(data.session);
-      toast(decision === 'match' ? t("Confirmation recorded.") : t("The session was marked as a mismatch."), decision === 'match' ? 'ok' : 'danger');
+      if (decision === 'match') {
+        toast(data.session.state === 'verified' ? t("Both codes were verified.") : t("Your code was verified. Waiting for the other person."), 'ok');
+      } else {
+        toast(t("The session was marked as a mismatch."), 'danger');
+      }
     } catch (error) {
       toast(errorText(error), 'danger');
     }
+  }
+
+  function verifyCode() {
+    const input = $('#other-code');
+    const code = input ? input.value.trim() : '';
+    if (!code) {
+      toast(t("Enter the code they read to you."), 'warn');
+      return;
+    }
+    confirmSession('match', code);
   }
 
   async function revealPn() {
@@ -590,8 +608,8 @@
       revealPn();
       return;
     }
-    if (action === 'confirm') {
-      confirmSession('match');
+    if (action === 'verify-code') {
+      verifyCode();
       return;
     }
     if (action === 'mismatch') {
@@ -625,17 +643,6 @@
     if (action === 'print') {
       window.print();
       return;
-    }
-  }
-
-  function handleChange(event) {
-    if (event.target.id === 'confirm-code') {
-      state.compare.code = event.target.checked;
-      updateConfirmButton();
-    }
-    if (event.target.id === 'confirm-person') {
-      state.compare.person = event.target.checked;
-      updateConfirmButton();
     }
   }
 
@@ -727,7 +734,6 @@
   }
 
   document.addEventListener('click', handleAction);
-  document.addEventListener('change', handleChange);
   document.addEventListener('DOMContentLoaded', () => {
     initHome();
     initJoin();

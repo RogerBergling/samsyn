@@ -94,6 +94,12 @@ def new_words() -> list[str]:
     return secrets.SystemRandom().sample(WORDS, 3)
 
 
+def normalize_code(value: str | None) -> str:
+    """Return the six-digit part of a spoken/read code."""
+    digits = re.sub(r"\D", "", value or "")
+    return digits[:6]
+
+
 def token_hash(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 

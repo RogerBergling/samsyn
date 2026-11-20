@@ -40,7 +40,7 @@ The app should **not** be published directly. Bind it to localhost or a private 
 | `PROXY_SHARED_SECRET` | unset | Optional shared secret required in `X-Proxy-Secret`. |
 | `COOKIE_SECURE` | true in proxy mode | Adds `Secure` to the session cookie. Set `0` only for local HTTP. |
 | `COOKIE_NAME` | `__Host-samsyn_sid` when secure, else `samsyn_sid` | Session cookie name. The `__Host-` prefix requires `Secure`, `Path=/`, and no `Domain`. |
-| `BASE_URL` | derived from Host | Absolute URL used for invite links. Set this in production. |
+| `BASE_URL` | required | Public absolute URL used in invitation links, e.g. `https://verify.example.se`. The app refuses to start without it. |
 | `ALLOWED_ORIGINS` | empty | Comma-separated additional browser origins accepted by the CSRF origin check, e.g. an alias hostname. The request’s own host is always accepted. |
 | `PROXY_LOGOUT_URL` | unset | Redirect target for sign-out. |
 | `DATA_DIR` | `./data` | SQLite data directory. Use a persistent volume in containers. |

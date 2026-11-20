@@ -178,6 +178,27 @@ class SamsynTests(unittest.TestCase):
         )
         self.assertEqual(status, 201, data)
 
+    def test_invite_link_uses_configured_public_base_url(self) -> None:
+        public_dir = self.directory / "public-base"
+        public_dir.mkdir()
+        config = make_config(public_dir, base_url="https://verify.example.test")
+        client = self.start_extra_server(config)
+        client.login("alice")
+        status, data, _ = client.post_json(
+            "/api/sessions",
+            {
+                "kind": "one_to_one",
+                "context": "",
+                "pn_mode": "masked",
+                "duration_minutes": 5,
+            },
+        )
+        self.assertEqual(status, 201, data)
+        self.assertTrue(
+            data["join_url"].startswith("https://verify.example.test/join/"),
+            data["join_url"],
+        )
+
     def test_language_detection_and_switch(self) -> None:
         client = self.client()
         client.login("alice")
@@ -275,16 +296,27 @@ class SamsynTests(unittest.TestCase):
         self.assertEqual(len(view["participants"]), 2)
         bob_view = next(p for p in view["participants"] if not p["is_me"])
         self.assertEqual(bob_view["pn"], "19850202-5678")
+        self.assertNotIn("code", view)
+        self.assertNotIn("code", bob_view)
+        self.assertNotIn("words", bob_view)
+        self.assertIn("my_code", view)
 
         status, _, bob_data = bob.get(f"/api/sessions/{session_id}")
         bob_session = json.loads(bob_data)["session"]
         alice_view = next(p for p in bob_session["participants"] if not p["is_me"])
         self.assertEqual(alice_view["pn"], "19900101-1234")
 
+        alice_code = created["view"]["my_code"]
+        bob_code = joined["session"]["my_code"]
+        self.assertNotEqual(alice_code, bob_code)
         roster = joined["session"]["roster_version"]
         status, alice_confirmed, _ = alice.post_json(
             f"/api/sessions/{session_id}/confirm",
-            {"decision": "match", "roster_version": roster},
+            {
+                "decision": "match",
+                "roster_version": roster,
+                "code": bob_code,
+            },
         )
         self.assertEqual(status, 200, alice_confirmed)
         self.assertEqual(alice_confirmed["session"]["state"], "confirming")
@@ -292,7 +324,11 @@ class SamsynTests(unittest.TestCase):
 
         status, bob_confirmed, _ = bob.post_json(
             f"/api/sessions/{session_id}/confirm",
-            {"decision": "match", "roster_version": roster},
+            {
+                "decision": "match",
+                "roster_version": roster,
+                "code": alice_code,
+            },
         )
         self.assertEqual(status, 200, bob_confirmed)
         final = bob_confirmed["session"]
@@ -326,6 +362,27 @@ class SamsynTests(unittest.TestCase):
         )
         self.assertEqual(status, 410)
         self.assertEqual(data["error"]["code"], "used")
+
+    def test_wrong_or_missing_counterpart_code_is_rejected(self) -> None:
+        alice, bob, session_id, token, created, joined = self.create_and_join()
+        roster = joined["session"]["roster_version"]
+
+        status, data, _ = alice.post_json(
+            f"/api/sessions/{session_id}/confirm",
+            {"decision": "match", "roster_version": roster, "code": ""},
+        )
+        self.assertEqual(status, 422)
+        self.assertEqual(data["error"]["code"], "invalid_code")
+
+        status, data, _ = alice.post_json(
+            f"/api/sessions/{session_id}/confirm",
+            {
+                "decision": "match",
+                "roster_version": roster,
+                "code": joined["session"]["my_code"],
+            },
+        )
+        self.assertEqual(status, 200, data)
 
     def test_mismatch_creates_no_receipt(self) -> None:
         alice, bob, session_id, token, _, joined = self.create_and_join()
@@ -379,12 +436,20 @@ class SamsynTests(unittest.TestCase):
 
         status, _, _ = bob.post_json(
             f"/api/sessions/{session_id}/confirm",
-            {"decision": "match", "roster_version": roster},
+            {
+                "decision": "match",
+                "roster_version": roster,
+                "code": data["view"]["my_code"],
+            },
         )
         self.assertEqual(status, 200)
         status, final, _ = alice.post_json(
             f"/api/sessions/{session_id}/confirm",
-            {"decision": "match", "roster_version": roster},
+            {
+                "decision": "match",
+                "roster_version": roster,
+                "code": joined["session"]["my_code"],
+            },
         )
         self.assertEqual(status, 200, final)
         self.assertEqual(final["session"]["state"], "verified")

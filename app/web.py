@@ -452,6 +452,7 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                     session_id,
                     decision=str(body.get("decision", "")),
                     roster_version=body.get("roster_version"),
+                    code=str(body.get("code", "")),
                     base_url=self._base_url(),
                     ip_hash=security.hash_ip(config.secret_key, self.client_address[0]),
                     ua_hash=security.hash_ua(config.secret_key, self.headers.get("User-Agent")),
@@ -800,7 +801,7 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 200,
                 data,
                 content_type,
-                cache="public, max-age=3600",
+                cache="no-cache",
             )
 
     return Handler
