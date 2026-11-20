@@ -65,7 +65,7 @@ def create_verification(
     except ValueError as exc:
         raise VerificationError(400, "invalid_input", str(exc)) from exc
 
-    duration_minutes = max(2, min(int(duration_minutes or 5), 15))
+    duration_minutes = max(2, min(int(duration_minutes or 10), 15))
     now = security.utcnow()
     token = security.new_token()
     verification_id = security.new_id()
@@ -458,10 +458,6 @@ def _build_view(
             "created_at": receipt_row["created_at"],
         }
 
-    now = security.utcnow()
-    expires_in = max(
-        0, int((security.parse_iso(verification["expires_at"]) - now).total_seconds())
-    )
     return {
         "id": verification["id"],
         "public_ref": verification["public_ref"],
@@ -476,7 +472,6 @@ def _build_view(
         "roster_version": verification["roster_version"],
         "created_at": verification["created_at"],
         "expires_at": verification["expires_at"],
-        "expires_in": expires_in,
         "completed_at": verification["completed_at"],
         "join_url": join_url_value,
         "participants": participant_views,

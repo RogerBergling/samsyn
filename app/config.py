@@ -41,7 +41,7 @@ class Config:
     version: str = "0.1.0"
     host: str = "0.0.0.0"
     port: int = 8080
-    verification_ttl_seconds: int = 300
+    verification_ttl_seconds: int = 600
     auth_session_ttl_seconds: int = 43200
     max_body_bytes: int = 65536
     rate_create_per_hour: int = 20
@@ -135,7 +135,7 @@ class Config:
             allowed_origins=allowed_origins,
             host=os.getenv("HOST", "0.0.0.0").strip(),
             port=_env_int("PORT", 8080),
-            verification_ttl_seconds=_env_int("VERIFICATION_TTL_SECONDS", 300),
+            verification_ttl_seconds=_env_int("VERIFICATION_TTL_SECONDS", 600),
             auth_session_ttl_seconds=_env_int("AUTH_SESSION_TTL_SECONDS", 43200),
             max_body_bytes=_env_int("MAX_BODY_BYTES", 65536),
             rate_create_per_hour=_env_int("RATE_CREATE_PER_HOUR", 20),

@@ -443,6 +443,9 @@
   function renderSession(view) {
     const root = $('#session-root');
     if (!root || !view) return;
+    const previousInput = $('#other-code');
+    const typedCode = previousInput ? previousInput.value : '';
+    const inputWasFocused = Boolean(previousInput && document.activeElement === previousInput);
     state.session = view;
     state.lastHash = JSON.stringify(view);
     const body = view.state === 'waiting'
@@ -466,6 +469,15 @@
       </div>
       ${progress(view)}
       ${body}`;
+    const nextInput = $('#other-code');
+    if (nextInput && typedCode) {
+      nextInput.value = typedCode;
+    }
+    if (nextInput && inputWasFocused) {
+      nextInput.focus();
+      const position = nextInput.value.length;
+      nextInput.setSelectionRange(position, position);
+    }
     root.setAttribute('aria-busy', 'false');
     if (TERMINAL.has(view.state)) stopPoll(); else startPoll(view.id);
     startCountdown();
@@ -683,7 +695,7 @@
           kind: $('#kind')?.value || 'one_to_one',
           context: $('#context')?.value || '',
           pn_mode: $('#pn-mode')?.value || 'full',
-          duration_minutes: Number($('#duration')?.value || 5),
+          duration_minutes: Number($('#duration')?.value || 10),
         };
         setLoading(button, true, t('Creating…'));
         try {

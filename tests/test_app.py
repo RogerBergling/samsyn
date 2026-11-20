@@ -299,6 +299,7 @@ class SamsynTests(unittest.TestCase):
         self.assertNotIn("code", view)
         self.assertNotIn("code", bob_view)
         self.assertNotIn("words", bob_view)
+        self.assertNotIn("expires_in", view)
         self.assertIn("my_code", view)
 
         status, _, bob_data = bob.get(f"/api/sessions/{session_id}")
