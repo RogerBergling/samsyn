@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   const root = document.documentElement;
-  const THEME_KEY = 'samsyn-theme';
+  const THEME_KEY = 'verify-theme';
 
   let storedTheme = null;
   try {

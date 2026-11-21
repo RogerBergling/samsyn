@@ -4,7 +4,7 @@ from typing import Any
 
 SUPPORTED = ("en", "sv")
 DEFAULT = "en"
-COOKIE_NAME = "samsyn_lang"
+COOKIE_NAME = "verify_lang"
 
 MOCK = {"en": "(mock)", "sv": "(test)"}
 
@@ -215,6 +215,7 @@ SV: dict[str, str] = {
     "You will see their name and a shared code. Compare the code on the call, then both confirm.": "Du ser personens namn och en gemensam kod. Jämför koden i samtalet och bekräfta sedan tillsammans.",
     "Not now": "Inte nu",
     "You are signed in as {name}.": "Du är inloggad som {name}.",
+    "Only one participant is in this session. The other person must open the link on their own device and sign in with their own account.": "Det är bara en deltagare i sessionen. Den andra personen måste öppna länken på sin egen enhet och logga in med sitt eget konto.",
     "JavaScript is required to join.": "JavaScript krävs för att gå med.",
     # Session (server-rendered shell)
     "Loading verification": "Laddar verifiering",
@@ -232,7 +233,7 @@ SV: dict[str, str] = {
     "This confirms that both accounts joined and confirmed the session. It does not verify the call audio or video.": "Detta bekräftar att båda kontona gick med i och bekräftade sessionen. Det verifierar inte samtalets ljud eller video.",
     # Safety
     "What this app confirms.": "Vad appen bekräftar.",
-    "Samsyn confirms that both people joined the same verification and confirmed each other's account. It does not verify the call itself.": "Samsyn bekräftar att båda personerna gick med i samma verifiering och bekräftade varandras konto. Det verifierar inte själva samtalet.",
+    "Verify confirms that both people joined the same verification and confirmed each other's account. It does not verify the call itself.": "Verify bekräftar att båda personerna gick med i samma verifiering och bekräftade varandras konto. Det verifierar inte själva samtalet.",
     "It confirms": "Det bekräftar",
     "Both signed-in accounts joined the same session.": "Båda inloggade konton gick med i samma session.",
     "Both people saw the same name and code.": "Båda personerna såg samma namn och kod.",
@@ -281,7 +282,7 @@ SV: dict[str, str] = {
     # Error / auth pages
     "Sign in required": "Inloggning krävs",
     "Open this app through your secure login.": "Öppna appen via din säkra inloggning.",
-    "Samsyn uses your existing secure login. If you reached this page directly, return to the app link you were given and sign in there.": "Samsyn använder din befintliga säkra inloggning. Om du kom hit direkt, gå tillbaka till app-länken du fick och logga in där.",
+    "Verify uses your existing secure login. If you reached this page directly, return to the app link you were given and sign in there.": "Verify använder din befintliga säkra inloggning. Om du kom hit direkt, gå tillbaka till app-länken du fick och logga in där.",
     "Try again": "Försök igen",
     "Error": "Fel",
     "Not found.": "Hittades inte.",

@@ -1,17 +1,29 @@
-# Naming — preliminary check
+# Naming — current name and clearance notes
 
 **Status:** preliminary, not legal advice.  
-**Date:** 2026-11-18  
-**Working title:** Project Verify.  
-**Decision (2026-11-18):** the product owner chose to keep **Samsyn** as the working name for the prototype despite the preliminary conflict. Commercial use still requires clearance; this document records the risk.
-
-The product name is a separate decision from the technical design. This document records what a quick public search and WHOIS check found, and proposes a shortlist for proper clearance.
+**Current product name:** **Verify** (renamed from the working name **Samsyn** on 2026-11-21).  
+**Purpose:** record why the name changed and what must be checked before commercial use.
 
 ---
 
-## 1. “Samsyn” — not recommended
+## 1. Current name: Verify
 
-“Samsyn” was the preferred name in the initial discussion. A preliminary check shows it is already used in several relevant contexts:
+“Verify” is the product name used by the app, repository, and container image.
+
+It is a **common English/Swedish word** and a generic verb. That makes it easy to understand, but it also means:
+
+- trademark protection may be difficult,
+- many companies and products may use the same or a similar name,
+- domains and app-store names may be taken,
+- a proper clearance search is still required before branding, paid launch, or public marketing.
+
+**Do not treat the rename as trademark clearance.** It is a working product name.
+
+---
+
+## 2. Why the previous name was dropped
+
+The earlier working name was **Samsyn**. A preliminary public check found prior use in the same space:
 
 | Use | What it is | Why it matters |
 |---|---|---|
@@ -23,45 +35,28 @@ The product name is a separate decision from the technical design. This document
 | **samsyn.com** | Registered since 2023; parked/aftermarket nameservers | Domain not available |
 | **samsyn.app** | Registered/resolving | Domain not available |
 
-**Conclusion:** using “Samsyn” would create a high risk of brand confusion, trademark conflict, and domain unavailability — especially because one prior use is a video customer-service app. Do not commit to it without a professional trademark search and legal advice.
+**Conclusion:** Samsyn was too close to existing uses and domain availability was poor. It was replaced by Verify on 2026-11-21.
 
 ---
 
-## 2. What the name needs to do
+## 3. What “Verify” must not overpromise
 
-The product is about two or more people confirming that they are present together and that they are who they say they are. The name should work in Swedish first, be easy to say and spell, and not imply that the app can authenticate a voice or guarantee that a call is untampered.
+The app verifies **account presence and mutual code entry**, not the call audio/video channel. Avoid marketing such as:
 
-Avoid:
+- “verified voice”,
+- “secure call”,
+- “guaranteed identity”,
+- “bank-grade” unless a specific eID/contract supports it.
 
-- names containing **BankID** or **Freja** (trademark and implied affiliation),
-- names that promise “secure call” or “verified voice” (the app does not verify the call channel),
-- generic Swedish words that are already used by many companies,
-- names that are hard to spell over the phone.
+Use language such as:
 
----
-
-## 3. Candidate directions
-
-These are **concept candidates**, not cleared names. Domain status is a preliminary WHOIS signal and can change at any time.
-
-| Candidate | Meaning / idea | Preliminary domain signal | Notes |
-|---|---|---|---|
-| **Samstämma** | Swedish: “same voice” / “in agreement”. A double meaning that fits a call: same voice, same conclusion. | `samstamma.se` appeared unregistered on 2026-11-18 | Distinctive but long (10 letters). Strong conceptual fit. Needs trademark check; common-word risk. |
-| **Dubbelkoll** | Swedish: “double-check”. Friendly, everyday, describes the mutual check. | `dubbelkoll.se` registered (inactive) | Very easy to understand. Common word; may be hard to protect. |
-| **VemDär** | Swedish: “who’s there?” Playful and call-related. | Not checked | Works well in consumer contexts; may feel informal for B2B. |
-| **Tvåsam** | Swedish: “togetherness / the two of us”. Warm and mutual. | `tvasam.se` registered 2026-11-01 | Recently registered by someone else; likely unavailable. |
-| **Kvittens** | Swedish: “acknowledgement / receipt”. Emphasises the proof. | `kvittens.se` registered | Formal/B2B feel; may sound like a payment receipt. |
-| **Vouch** | English verb: “to vouch for someone”. International and memorable. | Not checked | Common word; likely trademark/domain conflicts. Best if the product is international. |
-
-**Preliminary shortlist:** Samstämma, Dubbelkoll, VemDär, Vouch.
-
-My conceptual favourite for a Swedish product is **Samstämma**: it means both “same voice” and “in agreement”, which is exactly the ceremony. It is long, so test it with real users before committing. **Dubbelkoll** is the friendlier consumer option. **Vouch** is the international option.
+> “Verify who you are talking to.”
+>
+> “Both people confirm each other’s code.”
 
 ---
 
-## 4. Clearance checklist before committing
-
-A domain being unregistered is not a reservation and is not trademark clearance. Before spending money on branding:
+## 4. Clearance checklist before commercial use
 
 1. **Trademark search**
    - PRV (Sweden), EUIPO (EU), and possibly WIPO.
@@ -70,35 +65,37 @@ A domain being unregistered is not a reservation and is not trademark clearance.
 
 2. **Company-name search**
    - Bolagsverket.
-   - Look for existing AB/enskild firma with the same or similar name.
+   - Look for existing AB/enskild firma with the same or a similar name.
 
-3. **Domain search**
+3. **Domain and handle search**
    - `.se`, `.com`, `.app`, `.io` as appropriate.
-   - Check social handles and app-store names.
+   - App Store, Google Play, GitHub, social handles.
    - Do not rely on WHOIS alone; availability can change.
 
 4. **Web and app-store search**
-   - Google, App Store, Google Play.
-   - Search in Swedish and English.
+   - Search “Verify” plus identity, calls, authentication, and meetings.
    - Check for prior use in the same or adjacent market.
 
 5. **Linguistic check**
-   - Say it aloud in Swedish and English.
-   - Check for unintended meanings, spelling variants, and homophones.
-   - Test with 5–10 target users.
+   - Verify it reads well in Swedish and English.
+   - Check for unintended meanings and homophones.
 
 6. **Legal review**
-   - Have a Swedish IP lawyer review the shortlist before launch.
+   - Have a Swedish IP lawyer review the name before launch.
    - This document is not legal advice.
 
 ---
 
 ## 5. Recommendation
 
-1. Do **not** use “Samsyn” without clearance; the prior use is too close.
-2. Run a proper clearance on **Samstämma**, **Dubbelkoll**, **VemDär**, and **Vouch**.
-3. Use **Project Verify** as the internal working title until a name is cleared.
-4. If the product is Sweden-only, prioritize a Swedish name. If it will be international, prioritize a name that works in English and Swedish.
+1. Use **Verify** as the current product name and in the repository/image.
+2. Run a proper clearance search before paid launch, public branding, or domain purchases.
+3. If “Verify” is blocked, the earlier shortlist remains available for evaluation:
+   - **Samstämma** — Swedish: “same voice / in agreement”
+   - **Dubbelkoll** — Swedish: “double-check”
+   - **VemDär** — Swedish: “who’s there?”
+   - **Vouch** — English: “to vouch for someone”
+4. Keep the technical package/cookie/database compatibility names separate from branding where changing them would break existing deployments or data.
 
 ---
 
@@ -107,4 +104,4 @@ A domain being unregistered is not a reservation and is not trademark clearance.
 - IKEA Samsyn press release (2018): https://via.tt.se/pressmeddelande/3245305/traffa-ikea-i-mobilen-fa-kundservice-via-video
 - Samsyn (Sambruk) municipal system catalogue: https://sambruk.se / https://samsyn.io
 - Samsyn AB, org.nr 559489-2738: https://bolagsprofil.se/foretag/5594892738
-- WHOIS: `.se` via IIS, `.com`/`.io` via registry WHOIS, checked 2026-11-18.
+- WHOIS checks: `.se` via IIS, `.com`/`.io` via registry WHOIS, last checked 2026-11-18.

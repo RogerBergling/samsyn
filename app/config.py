@@ -37,8 +37,8 @@ class Config:
     proxy_logout_url: str | None
     github_url: str
     allowed_origins: tuple[str, ...] = ()
-    app_name: str = "Samsyn"
-    version: str = "0.1.0"
+    app_name: str = "Verify"
+    version: str = "0.2.0"
     host: str = "0.0.0.0"
     port: int = 8080
     verification_ttl_seconds: int = 600
@@ -48,7 +48,7 @@ class Config:
     rate_join_per_hour: int = 60
     rate_confirm_per_minute: int = 60
     rate_reveal_per_minute: int = 20
-    cookie_name: str = "samsyn_sid"
+    cookie_name: str = "verify_sid"
     warnings: tuple[str, ...] = field(default_factory=tuple)
 
     @classmethod
@@ -59,6 +59,7 @@ class Config:
 
         data_dir = Path(os.getenv("DATA_DIR", "./data")).expanduser().resolve()
         data_dir.mkdir(parents=True, exist_ok=True)
+        # Keep the legacy database filename so an existing installation keeps its data.
         database_path = Path(
             os.getenv("DATABASE_PATH", str(data_dir / "samsyn.db"))
         ).expanduser().resolve()
@@ -117,7 +118,7 @@ class Config:
 
         cookie_secure = _env_bool("COOKIE_SECURE", auth_mode == "proxy")
         cookie_name = os.getenv("COOKIE_NAME", "").strip() or (
-            "__Host-samsyn_sid" if cookie_secure else "samsyn_sid"
+            "__Host-verify_sid" if cookie_secure else "verify_sid"
         )
 
         return cls(
@@ -131,7 +132,7 @@ class Config:
             proxy_shared_secret=proxy_shared_secret,
             base_url=base_url,
             proxy_logout_url=os.getenv("PROXY_LOGOUT_URL", "").strip() or None,
-            github_url=os.getenv("GITHUB_URL", "https://github.com/RogerBergling").strip(),
+            github_url=os.getenv("GITHUB_URL", "https://github.com/RogerBergling/verify").strip(),
             allowed_origins=allowed_origins,
             host=os.getenv("HOST", "0.0.0.0").strip(),
             port=_env_int("PORT", 8080),

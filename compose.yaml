@@ -1,7 +1,10 @@
+# Keep the legacy project namespace so the existing named volume is preserved.
+name: samsyn
+
 services:
-  samsyn:
+  verify:
     build: .
-    image: ${IMAGE_NAME:-samsyn:dev}
+    image: ${IMAGE_NAME:-verify:dev}
     restart: unless-stopped
     ports:
       - "8080:8080"

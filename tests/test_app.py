@@ -33,7 +33,7 @@ def make_config(
         proxy_shared_secret=proxy_shared_secret,
         base_url=base_url,
         proxy_logout_url=None,
-        github_url="https://github.com/RogerBergling",
+        github_url="https://github.com/RogerBergling/verify",
         allowed_origins=allowed_origins,
     )
 
@@ -54,7 +54,7 @@ class Client:
     ) -> tuple[int, dict, bytes]:
         url = path if path.startswith("http") else self.base_url + path
         data = None
-        request_headers = {"User-Agent": "SamsynTest/1.0"}
+        request_headers = {"User-Agent": "VerifyTest/1.0"}
         if body is not None:
             data = json.dumps(body).encode("utf-8")
             request_headers["Content-Type"] = "application/json"
@@ -93,7 +93,7 @@ class Client:
         return text
 
 
-class SamsynTests(unittest.TestCase):
+class VerifyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.directory = Path(self.tmp.name)

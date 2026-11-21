@@ -1,6 +1,6 @@
 # Deployment notes
 
-**Status:** implementation notes for v0.1.  
+**Status:** implementation notes for v0.2.  
 **Related:** [README](../README.md), [Design](design.md), [Threat model](threat-model.md).
 
 ---
@@ -8,13 +8,13 @@
 ## 1. Container
 
 ```bash
-docker pull ghcr.io/rogerbergling/samsyn:latest
+docker pull ghcr.io/rogerbergling/verify:latest
 ```
 
 Run behind the auth proxy:
 
 ```bash
-docker run -d --name samsyn \
+docker run -d --name verify \
   -p 127.0.0.1:8080:8080 \
   -e AUTH_MODE=proxy \
   -e SECRET_KEY="$(python3 -c 'import secrets; print(secrets.token_urlsafe(48))')" \
@@ -23,10 +23,24 @@ docker run -d --name samsyn \
   -e PROXY_SHARED_SECRET="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')" \
   -e DATA_DIR=/data \
   -v samsyn-data:/data \
-  ghcr.io/rogerbergling/samsyn:latest
+  ghcr.io/rogerbergling/verify:latest
 ```
 
 The app should **not** be published directly. Bind it to localhost or a private network, and let the proxy be the only route.
+
+### Upgrading from the previous Samsyn deployment
+
+The Compose project namespace and data volume remain `samsyn` so existing data is
+reused. Remove the old container before starting the renamed service:
+
+```bash
+docker compose -f compose.prod.yaml down --remove-orphans
+docker compose -f compose.prod.yaml pull
+docker compose -f compose.prod.yaml up -d --force-recreate --remove-orphans
+```
+
+`down` without `-v` preserves the named volume. Do not add `-v` unless you intend
+to delete the data.
 
 ---
 
@@ -39,7 +53,7 @@ The app should **not** be published directly. Bind it to localhost or a private 
 | `PN_ENCRYPTION_KEY` | derived from `SECRET_KEY` | Optional separate key for personal-number encryption. |
 | `PROXY_SHARED_SECRET` | unset | Optional shared secret required in `X-Proxy-Secret`. |
 | `COOKIE_SECURE` | true in proxy mode | Adds `Secure` to the session cookie. Set `0` only for local HTTP. |
-| `COOKIE_NAME` | `__Host-samsyn_sid` when secure, else `samsyn_sid` | Session cookie name. The `__Host-` prefix requires `Secure`, `Path=/`, and no `Domain`. |
+| `COOKIE_NAME` | `__Host-verify_sid` when secure, else `verify_sid` | Session cookie name. The `__Host-` prefix requires `Secure`, `Path=/`, and no `Domain`. |
 | `BASE_URL` | required | Public absolute URL used in invitation links, e.g. `https://verify.example.se`. The app refuses to start without it. |
 | `ALLOWED_ORIGINS` | empty | Comma-separated additional browser origins accepted by the CSRF origin check, e.g. an alias hostname. The request’s own host is always accepted. |
 | `PROXY_LOGOUT_URL` | unset | Redirect target for sign-out. |
@@ -52,7 +66,7 @@ The app should **not** be published directly. Bind it to localhost or a private 
 | `RATE_JOIN_PER_HOUR` | `60` | Join attempt limit. |
 | `RATE_CONFIRM_PER_MINUTE` | `60` | Confirmation limit. |
 | `RATE_REVEAL_PER_MINUTE` | `20` | PN reveal limit. |
-| `GITHUB_URL` | `https://github.com/RogerBergling` | Footer link. |
+| `GITHUB_URL` | `https://github.com/RogerBergling/verify` | Footer link. |
 
 **Secrets:** generate with a CSPRNG, store in a secret manager, and never commit them. Rotating `SECRET_KEY` invalidates existing app sessions and receipt HMACs; rotating the PN key makes existing encrypted personal numbers unreadable. Plan rotation accordingly.
 
@@ -110,7 +124,7 @@ Traefik can forward authentication to an external service and copy selected resp
 ```yaml
 http:
   middlewares:
-    samsyn-auth:
+    verify-auth:
       forwardAuth:
         address: "http://auth-service:4181/verify"
         trustForwardHeader: false
@@ -123,7 +137,7 @@ http:
           - X-Auth-Org
 ```
 
-The auth service must return those headers only after validating the user's session, and Traefik must be the only route to the Samsyn container. Verify with the tests below; do not assume the middleware strips inbound headers.
+The auth service must return those headers only after validating the user's session, and Traefik must be the only route to the Verify container. Verify with the tests below; do not assume the middleware strips inbound headers.
 
 ### Example: nginx `auth_request`
 
@@ -131,7 +145,7 @@ The auth service must return those headers only after validating the user's sess
 
 ### Example: OAuth2 Proxy
 
-OAuth2 Proxy can pass `X-Auth-Request-User`, `X-Auth-Request-Email`, and similar headers. Map those to Samsyn's header names in your ingress/gateway, and set `X-Auth-Assurance` explicitly. Do not use the email as `X-User-Id` unless it is stable and opaque enough for your directory.
+OAuth2 Proxy can pass `X-Auth-Request-User`, `X-Auth-Request-Email`, and similar headers. Map those to Verify's header names in your ingress/gateway, and set `X-Auth-Assurance` explicitly. Do not use the email as `X-User-Id` unless it is stable and opaque enough for your directory.
 
 ---
 
@@ -175,7 +189,10 @@ Add these checks to CI or your deployment smoke tests.
 
 ## 6. Persistent data and backups
 
-SQLite is used for v0.1:
+SQLite is used for v0.2. The project was renamed from Samsyn; the database file
+name, Docker volume name, Compose project name, and encryption salt are retained
+for compatibility with existing installations. Do not rename them without a
+migration plan.
 
 - `$DATA_DIR/samsyn.db` — users, sessions, confirmations, events, receipts.
 - WAL files may exist next to it.
@@ -199,7 +216,7 @@ ghcr.io/<owner>/<repo>:<tag>
 For this repository, the planned image is:
 
 ```
-ghcr.io/rogerbergling/samsyn
+ghcr.io/rogerbergling/verify
 ```
 
 If the package is private:
@@ -216,7 +233,7 @@ The workflow builds `linux/amd64` and `linux/arm64`, with SBOM and provenance. I
 
 ## 8. eID / BankID / Freja
 
-v0.1 does not integrate BankID or Freja. It consumes the proxy's identity assertion. If the proxy is already BankID/Freja-based, set `X-Auth-Assurance` to `eid_auth` and the app will label it accordingly. If you need signing or a direct eID integration later:
+v0.2 does not integrate BankID or Freja. It consumes the proxy's identity assertion. If the proxy is already BankID/Freja-based, set `X-Auth-Assurance` to `eid_auth` and the app will label it accordingly. If you need signing or a direct eID integration later:
 
 - BankID: RP API v6, mTLS, `/auth` or `/sign`, `/collect`, animated QR, production agreement via a bank or broker.
 - Freja: OIDC for authentication; separate Signature API for signing; production contract and client certificate.

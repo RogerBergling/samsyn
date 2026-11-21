@@ -115,7 +115,7 @@ def create_server(
 def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
-        server_version = "Samsyn"
+        server_version = "Verify"
         sys_version = ""
         timeout = 30  # slow-client guard
 
@@ -503,7 +503,7 @@ def make_handler(config: Config) -> type[BaseHTTPRequestHandler]:
                 200,
                 receipt,
                 headers={
-                    "Content-Disposition": f'attachment; filename="samsyn-{receipt["payload"]["reference"]}.json"'
+                    "Content-Disposition": f'attachment; filename="verify-{receipt["payload"]["reference"]}.json"'
                 },
             )
 

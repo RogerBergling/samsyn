@@ -288,6 +288,9 @@
           <button class="btn btn-danger" type="button" data-action="cancel">${t("Cancel")}</button>
         </div>
         <p class="safety-note">${t("You are signed in as {name}.", { name: view.me.name })}</p>
+        <div class="callout compact">
+          ${t("Only one participant is in this session. The other person must open the link on their own device and sign in with their own account.")}
+        </div>
       </div>`;
   }
 

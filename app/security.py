@@ -106,6 +106,7 @@ def token_hash(token: str) -> str:
 
 def _fernet_key(secret_key: str, pn_key: str | None) -> bytes:
     material = (pn_key or secret_key).encode("utf-8")
+    # Legacy salt: do not rename it, or existing encrypted personal numbers cannot be decrypted.
     return base64.urlsafe_b64encode(hashlib.sha256(material + b"|samsyn-pn-v1").digest())
 
 

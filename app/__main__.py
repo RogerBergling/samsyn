@@ -26,7 +26,7 @@ def main() -> None:
     server = create_server(config)
     stop = threading.Event()
     threading.Thread(
-        target=_cleanup_loop, args=(config, stop), daemon=True, name="samsyn-cleanup"
+        target=_cleanup_loop, args=(config, stop), daemon=True, name="verify-cleanup"
     ).start()
 
     def shutdown(signum: int, frame: object) -> None:

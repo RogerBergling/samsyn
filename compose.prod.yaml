@@ -1,6 +1,9 @@
+# Keep the legacy project namespace so the existing named data volume is preserved.
+name: samsyn
+
 services:
-  samsyn:
-    image: ghcr.io/rogerbergling/samsyn:latest
+  verify:
+    image: ghcr.io/rogerbergling/verify:latest
     restart: unless-stopped
     ports:
       - "8080:8080"

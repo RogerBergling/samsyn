@@ -1,10 +1,10 @@
-# Samsyn
+# Verify
 
-**Status:** v0.1 implementation — working app, container, and GHCR pipeline.  
-**Working name:** Samsyn. It is **not trademark-cleared**; see [docs/naming.md](docs/naming.md).  
+**Status:** v0.2 implementation — working app, container, and GHCR pipeline.  
+**Product name:** Verify. It is a common word and is **not trademark-cleared**; see [docs/naming.md](docs/naming.md).  
 **Design:** dark, clear interface inspired by [apps.bergling.net](https://apps.bergling.net), simplified for end users.
 
-Samsyn is a web app for **mutual verification between people in a call**. Two authenticated people join a short session, see each other’s identity and assurance level, and each reads their **own** code aloud for the other to enter and verify. The result is an integrity-protected receipt.
+Verify is a web app for **mutual verification between people in a call**. Two authenticated people join a short session, see each other’s identity and assurance level, and each reads their **own** code aloud for the other to enter and verify. The result is an integrity-protected receipt.
 
 It sits behind an existing secure proxy. The app has no password login of its own, but it still enforces authorization, session security, CSRF, rate limits, audit, and privacy.
 
@@ -27,7 +27,7 @@ It sits behind an existing secure proxy. The app has no password login of its ow
 - A How it works page covering what to share, what each person does, and who can hear the code.
 - Dockerfile, Compose files, CI, and a GitHub Actions workflow that publishes to GHCR.
 
-Group verification is deliberately not in v0.1. The data model and design leave room for it, but group roster verification needs its own phase.
+Group verification is deliberately not in v0.2. The data model and design leave room for it, but group roster verification needs its own phase.
 
 ---
 
@@ -56,6 +56,11 @@ docker compose up --build
 ```
 
 The app uses SQLite at `DATA_DIR/samsyn.db` (default `./data/samsyn.db`).
+
+**Compatibility note:** the project was renamed from Samsyn, but the database
+filename (`samsyn.db`), Docker volume (`samsyn-data`), legacy Compose project name
+(`samsyn`), and encryption salt are intentionally retained so existing data keeps
+working. Do not rename them without a migration plan.
 
 ---
 
@@ -138,7 +143,7 @@ If you do not need full display, set the default to masked in `app/templates/hom
 ## Docker
 
 ```bash
-docker build -t samsyn:dev .
+docker build -t verify:dev .
 
 docker run --rm -p 8080:8080 \
   -e AUTH_MODE=dev \
@@ -147,7 +152,7 @@ docker run --rm -p 8080:8080 \
   -e BASE_URL=http://localhost:8080 \
   -e DATA_DIR=/data \
   -v samsyn-data:/data \
-  samsyn:dev
+  verify:dev
 ```
 
 The image runs as a non-root user, exposes port `8080`, and has a `/healthz` health check.
@@ -160,7 +165,18 @@ cp .env.example .env
 docker compose -f compose.prod.yaml up -d
 ```
 
-The production compose file expects the image `ghcr.io/rogerbergling/samsyn:latest`. Change the image if the repository name differs.
+The production compose file expects the image `ghcr.io/rogerbergling/verify:latest`. Change the image if the repository name differs.
+
+**Upgrading from Samsyn:** the Compose project namespace and data volume remain
+`samsyn` on purpose. Remove the old container before starting the renamed service:
+
+```bash
+docker compose -f compose.prod.yaml down --remove-orphans
+docker compose -f compose.prod.yaml pull
+docker compose -f compose.prod.yaml up -d --force-recreate --remove-orphans
+```
+
+Do not use `down -v`; that would delete the existing data volume.
 
 ---
 
@@ -169,16 +185,16 @@ The production compose file expects the image `ghcr.io/rogerbergling/samsyn:late
 The workflow `.github/workflows/container.yml` builds on pushes to `main`, version tags `v*`, and manual dispatch. It publishes multi-arch images (`linux/amd64`, `linux/arm64`) with SBOM and provenance:
 
 ```
-ghcr.io/rogerbergling/samsyn:latest
-ghcr.io/rogerbergling/samsyn:sha-<commit>
-ghcr.io/rogerbergling/samsyn:v0.1.0
+ghcr.io/rogerbergling/verify:latest
+ghcr.io/rogerbergling/verify:sha-<commit>
+ghcr.io/rogerbergling/verify:v0.2.0
 ```
 
 The workflow uses the repository `GITHUB_TOKEN` with `packages: write`. If the package is private, authenticate before pulling:
 
 ```bash
 echo "$GITHUB_TOKEN" | docker login ghcr.io -u <github-user> --password-stdin
-docker pull ghcr.io/rogerbergling/samsyn:latest
+docker pull ghcr.io/rogerbergling/verify:latest
 ```
 
 Package visibility is controlled in the GitHub package settings. A private repository does **not** automatically make the package public; GitHub packages are private by default.
@@ -239,13 +255,13 @@ compose.prod.yaml    production image
 
 ## Security boundaries and limitations
 
-Samsyn proves **account presence in the same session**, not the call channel:
+Verify proves **account presence in the same session**, not the call channel:
 
 - It does **not** prove that the voice or video stream is authentic.
 - It does **not** prove that a device or account is not compromised.
 - It does **not** detect a group-call listener who never joins the app.
 - A corporate SSO name is not a legal identity; the assurance label stays honest.
-- BankID/Freja are **not** integrated in v0.1. If the proxy provides eID assurance, set `X-Auth-Assurance`; otherwise the app labels the identity as proxy-authenticated.
+- BankID/Freja are **not** integrated in v0.2. If the proxy provides eID assurance, set `X-Auth-Assurance`; otherwise the app labels the identity as proxy-authenticated.
 - Receipts are audit records, not qualified electronic signatures.
 
 Read [docs/security-model notes](docs/threat-model.md) and the in-app `/security` page.
@@ -254,7 +270,7 @@ Read [docs/security-model notes](docs/threat-model.md) and the in-app `/security
 
 ## Naming
 
-The working name is **Samsyn**, chosen by the product owner for the prototype despite a preliminary conflict check. There is prior use in the same space (IKEA Samsyn video customer service, Sambruk’s Samsyn, Samsyn AB, samsyn.io) and the `.se`/`.com`/`.app` domains are registered. Do not invest in branding or domains until a proper trademark/domain clearance is done. See [docs/naming.md](docs/naming.md).
+The product name is now **Verify**. It is a common English/Swedish word, so trademark and domain clearance is still required before commercial branding. The previous working name **Samsyn** was dropped because of prior use in the same space (IKEA Samsyn, Sambruk’s Samsyn, Samsyn AB, samsyn.io). See [docs/naming.md](docs/naming.md) for the history and clearance checklist.
 
 ---
 

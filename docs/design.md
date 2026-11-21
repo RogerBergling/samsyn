@@ -1,9 +1,9 @@
 # Project Verify — Design Document
 
-**Status:** Implemented as v0.1; design retained for review.  
-**Version:** 0.1  
+**Status:** Implemented as v0.2; design retained for review.  
+**Version:** 0.2  
 **Date:** 2026-11-18  
-**Working title:** Project Verify. Product name is **Samsyn** by product-owner decision — see [naming.md](naming.md).  
+**Working title:** Project Verify. Product name is **Verify** by product-owner decision — see [naming.md](naming.md).  
 **Audience:** Product owner, engineering, security, operations, legal/privacy.
 
 ---
@@ -14,8 +14,8 @@
 |---|---|---|
 | D1 | Use the existing proxy + identity headers. | The proxy is the authentication boundary. The app still enforces authorization, CSRF, sessions and rate limits. |
 | D2 | The claim is “both authenticated accounts are present in the same session.” | The app does not claim legal identity or call-channel integrity. |
-| D3 | Support 1:1, customer service and in-person in v0.1; group is phase 2. | Group roster verification is designed but not implemented. |
-| D4 | Keep “Samsyn” as the working name for the prototype. | The prior-use/trademark/domain risk is recorded and accepted for now; commercial use needs clearance. |
+| D3 | Support 1:1, customer service and in-person in v0.2; group is phase 2. | Group roster verification is designed but not implemented. |
+| D4 | Rename the project to **Verify** (2026-11-21). The previous name Samsyn was rejected due to prior use. | “Verify” is generic; trademark/domain clearance is still required before commercial branding. |
 | D5 | Full personal number must be displayable. | Implemented as an encrypted-at-rest, in-session display with a masked default option; never in receipts or logs; privacy review required. |
 | D6 | The proxy authenticates both employees and external customers. | Customer-service flows are in scope; verify the proxy’s actual assurance and coverage. |
 | D7 | Implement with Python 3.14 + stdlib HTTP + Jinja2 + SQLite. | No Node build step; container is small. Postgres/Redis are future scaling work. |
@@ -35,7 +35,7 @@ This design depends on the answers below. Each is marked as an assumption, not a
 | A5 | The proxy authenticates **all** participants who need the app, including external customers. | Confirmed by the product owner. Verify the proxy’s actual assurance and coverage. |
 | A6 | v1 does not integrate with a call platform (Teams, Zoom, Google Meet, telephony). The app is a separate browser tab/PWA. | The app cannot see the call participant list or verify the audio/video channel. |
 | A7 | Receipts are audit records, not legally binding signatures. BankID/Freja signing is an optional later phase. | Avoids overclaiming legal validity. |
-| A8 | Hosting is in the EU. v0.1 uses SQLite; Postgres/Redis are future scaling work. | Privacy and architecture. |
+| A8 | Hosting is in the EU. v0.2 uses SQLite; Postgres/Redis are future scaling work. | Privacy and architecture. |
 | A9 | The interface supports Swedish and English; the server detects `Accept-Language` and the user can switch with SV/EN. | Copy, code words, accessibility. |
 | A10 | v1 covers 1:1, customer service and in-person. Group calls are designed but scheduled for phase 2. | Scope control. |
 
@@ -489,7 +489,7 @@ Alice (browser)          BFF / app                   Bob (browser)
 | **Auth proxy / IdP** (existing) | Authenticates users; injects identity assertions; strips client-supplied identity headers; enforces access to the app network |
 | **BFF / web app** | Validates assertions; creates BFF sessions; renders pages; enforces authorization; orchestrates verification; serves JSON for polling |
 | **Verification domain module** | Session state machine, code generation, roster management, confirmation logic, receipts |
-| **SQLite (v0.1)** | System of record: users, sessions, participants, events, receipts |
+| **SQLite (v0.2)** | System of record: users, sessions, participants, events, receipts |
 | **Postgres / Redis** (future) | Horizontal scaling, shared rate limits, pub/sub |
 | **Expiry worker** | Marks expired sessions; emits events; cleans up ephemeral data |
 | **eID adapter** (future) | BankID/Freja auth and signature integration behind a common interface |
@@ -501,18 +501,18 @@ Alice (browser)          BFF / app                   Bob (browser)
 - The browser never sees the identity headers. It receives only the session view, which may include the full personal number when the product requirement/config allows it.
 - The BFF creates its own `HttpOnly` session cookie; the browser sends only that cookie.
 - Authorization and CSRF are enforced server-side.
-- Future SSE/WebSocket connections can be authenticated with the same session; v0.1 uses short polling.
+- Future SSE/WebSocket connections can be authenticated with the same session; v0.2 uses short polling.
 - The app can rotate/revoke sessions independently of the proxy.
 - The proxy can be replaced without rewriting the frontend.
 
-### 8.3 Implemented stack (v0.1)
+### 8.3 Implemented stack (v0.2)
 
 The environment did not have Node.js, and the app is deliberately small. The implementation uses:
 
 - **Language:** Python 3.14.
 - **HTTP:** standard-library `ThreadingHTTPServer` with a small router.
 - **Templates:** Jinja2, server-rendered pages plus a small amount of vanilla JS.
-- **Database:** SQLite (WAL) for v0.1.
+- **Database:** SQLite (WAL) for v0.2.
 - **Validation:** explicit Python validators at every boundary.
 - **UI:** plain CSS design system inspired by apps.bergling.net; no external fonts or requests.
 - **Realtime:** 1.4-second polling. SSE/WebSocket is a future improvement.
@@ -537,7 +537,7 @@ TLS / WAF / DDoS protection
 Auth proxy / IdP  ──> identity headers / JWT
   │
   ▼ (private network / mTLS)
-BFF / app  ──> SQLite (v0.1)
+BFF / app  ──> SQLite (v0.2)
   │        └─> Postgres/Redis (future)
   │
   └─> eID provider (future, mTLS)
@@ -682,7 +682,7 @@ For POST endpoints that can be retried:
 
 ### 9.8 Personal data rules
 
-- **Do not store the raw personal number in plaintext.** v0.1 stores it with Fernet encryption at rest (key derived from `SECRET_KEY` or a separate `PN_ENCRYPTION_KEY`).
+- **Do not store the raw personal number in plaintext.** v0.2 stores it with Fernet encryption at rest (key derived from `SECRET_KEY` or a separate `PN_ENCRYPTION_KEY`).
 - If matching across sessions is needed, store `HMAC-SHA256(pepper, normalized_pn)` instead of ciphertext. A plain hash is not enough; the personal-number space is small.
 - The full number may be displayed **in-session** when `pn_mode='full'`, or after a participant explicitly reveals their own number in masked mode. Hide it when the tab loses visibility.
 - Mask the personal number in all receipts: `1990••••-••••`.
@@ -1089,7 +1089,7 @@ They solve **authentication** (and optionally signing). They do not, by themselv
 
 ## 15. Naming
 
-The working title is **Project Verify**. The product owner chose **Samsyn** for the prototype despite the preliminary conflict check. There is prior use in the same space (IKEA Samsyn video customer service, Sambruk’s Samsyn, Samsyn AB, samsyn.io), and the relevant domains are registered. The risk is recorded and accepted for the prototype; commercial use requires trademark/domain clearance. See [naming.md](naming.md).
+The product name is **Verify**, renamed from the earlier working name **Samsyn** on 2026-11-21. Samsyn was dropped because of prior use in the same space (IKEA Samsyn, Sambruk’s Samsyn, Samsyn AB, samsyn.io). “Verify” is a common word, so trademark and domain clearance is still required before commercial branding. See [naming.md](naming.md).
 
 Do not use “BankID” or “Freja” in the product name. Do not imply affiliation.
 
@@ -1218,7 +1218,7 @@ These must be answered before or during phase 0. If an answer is unknown, we wil
 12. Is it multi-tenant (multiple companies with their own branding)?
 13. Group calls: how many participants? Is the app roster enough, or do you need the call participant list?
 14. Which call platforms are used: Teams, Zoom, Google Meet, phone, something else? Do you have API access?
-15. **Resolved:** in-person is in scope for v0.1.
+15. **Resolved:** in-person is in scope for v0.2.
 
 ### 18.3 Product and operations
 
@@ -1230,7 +1230,7 @@ These must be answered before or during phase 0. If an answer is unknown, we wil
 21. Stack/hosting preference: cloud, on-prem, EU-only?
 22. Budget/timeline for eID contracts and certificates?
 23. Who operates support and incident response?
-24. **Resolved for the prototype:** keep Samsyn as the working name; commercial use requires clearance. See [naming.md](naming.md).
+24. **Resolved:** renamed to Verify on 2026-11-21; commercial use still requires trademark/domain clearance. See [naming.md](naming.md).
 
 ---
 

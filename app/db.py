@@ -82,6 +82,8 @@ CREATE TABLE IF NOT EXISTS participants (
     UNIQUE(verification_id, user_id)
 );
 CREATE INDEX IF NOT EXISTS idx_participants_session ON participants(verification_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_participants_session_code
+    ON participants(verification_id, code) WHERE code IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

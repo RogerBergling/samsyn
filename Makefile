@@ -7,7 +7,7 @@ test:
 	python3 -m unittest discover -s tests -v
 
 docker-build:
-	docker build -t ghcr.io/rogerbergling/samsyn:dev .
+	docker build -t ghcr.io/rogerbergling/verify:dev .
 
 docker-run:
 	docker run --rm -p 8080:8080 \
@@ -16,7 +16,7 @@ docker-run:
 		-e COOKIE_SECURE=0 \
 		-e DATA_DIR=/data \
 		-v samsyn-data:/data \
-		ghcr.io/rogerbergling/samsyn:dev
+		ghcr.io/rogerbergling/verify:dev
 
 secret:
 	python3 -c "import secrets; print(secrets.token_urlsafe(48))"
